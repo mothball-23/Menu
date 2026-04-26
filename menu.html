@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>菜单</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: #faf7f2;
+    color: #333;
+    padding-bottom: 40px;
+  }
+  header {
+    background: #b8341b;
+    color: #fff;
+    padding: 24px 16px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 22px; letter-spacing: 2px; }
+  header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+
+  .nav {
+    display: flex;
+    overflow-x: auto;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 80px;
+    z-index: 9;
+  }
+  .nav a {
+    flex-shrink: 0;
+    padding: 12px 18px;
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+  }
+  .nav a.active { color: #b8341b; border-bottom-color: #b8341b; }
+
+  .category { padding: 16px; }
+  .category h2 {
+    font-size: 16px;
+    color: #b8341b;
+    margin-bottom: 12px;
+    padding-left: 8px;
+    border-left: 3px solid #b8341b;
+  }
+
+  .dish {
+    display: flex;
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .dish img {
+    width: 90px;
+    height: 90px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: #eee;
+    flex-shrink: 0;
+  }
+  .dish-info { flex: 1; padding-left: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+  .dish-name { font-size: 16px; font-weight: 500; }
+  .dish-desc { font-size: 12px; color: #999; margin-top: 4px; line-height: 1.5; }
+  .dish-bottom { display: flex; justify-content: space-between; align-items: center; }
+  .dish-price { color: #b8341b; font-size: 18px; font-weight: 600; }
+  .dish-price small { font-size: 12px; font-weight: normal; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    color: #b8341b;
+    background: #fdecec;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>味家小厨</h1>
+  <p>欢迎光临 · 请慢慢挑选</p>
+</header>
+
+<nav class="nav" id="nav"></nav>
+
+<main id="menu"></main>
+
+<script>
+  // ====== 在这里编辑你的菜单数据 ======
+  const menuData = [
+    {
+      category: '招牌推荐',
+      dishes: [
+        { name: '宫保鸡丁', desc: '经典川菜，鸡肉嫩滑，花生酥脆', price: 38, tags: ['招牌'], img: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=200' },
+        { name: '红烧肉', desc: '肥而不腻，入口即化', price: 48, tags: ['热销'], img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200' },
+      ]
+    },
+    {
+      category: '热菜',
+      dishes: [
+        { name: '麻婆豆腐', desc: '麻辣鲜香，下饭神器', price: 22, tags: [], img: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=200' },
+        { name: '鱼香肉丝', desc: '酸甜微辣，传统味道', price: 32, tags: [], img: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=200' },
+        { name: '清炒时蔬', desc: '当季新鲜蔬菜', price: 18, tags: ['素'], img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200' },
+      ]
+    },
+    {
+      category: '凉菜',
+      dishes: [
+        { name: '凉拌黄瓜', desc: '清爽开胃', price: 12, tags: [], img: 'https://images.unsplash.com/photo-1564093497595-593b96d80180?w=200' },
+        { name: '口水鸡', desc: '麻辣鲜香，皮脆肉嫩', price: 28, tags: ['辣'], img: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=200' },
+      ]
+    },
+    {
+      category: '主食',
+      dishes: [
+        { name: '米饭', desc: '东北珍珠米', price: 3, tags: [], img: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=200' },
+        { name: '葱油拌面', desc: '香气扑鼻', price: 15, tags: [], img: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=200' },
+      ]
+    },
+    {
+      category: '饮品',
+      dishes: [
+        { name: '可乐', desc: '冰镇', price: 8, tags: [], img: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=200' },
+        { name: '酸梅汤', desc: '自家熬制', price: 10, tags: ['推荐'], img: 'https://images.unsplash.com/photo-1546171753-97d7676e4602?w=200' },
+      ]
+    },
+  ];
+  // ====== 修改菜单只需要改上面这段 ======
+
+  const nav = document.getElementById('nav');
+  const menu = document.getElementById('menu');
+
+  menuData.forEach((cat, i) => {
+    // 导航
+    const a = document.createElement('a');
+    a.href = '#cat-' + i;
+    a.textContent = cat.category;
+    if (i === 0) a.classList.add('active');
+    nav.appendChild(a);
+
+    // 分类区块
+    const section = document.createElement('section');
+    section.className = 'category';
+    section.id = 'cat-' + i;
+    section.innerHTML = `<h2>${cat.category}</h2>`;
+
+    cat.dishes.forEach(d => {
+      const tags = (d.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+      section.innerHTML += `
+        <div class="dish">
+          <img src="${d.img}" alt="${d.name}" onerror="this.style.background='#eee';this.src='';">
+          <div class="dish-info">
+            <div>
+              <div class="dish-name">${d.name}</div>
+              <div class="dish-desc">${d.desc || ''}</div>
+            </div>
+            <div class="dish-bottom">
+              <div>${tags}</div>
+              <div class="dish-price"><small>¥</small>${d.price}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    menu.appendChild(section);
+  });
+
+  // 点击导航高亮
+  nav.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      nav.querySelectorAll('a').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
