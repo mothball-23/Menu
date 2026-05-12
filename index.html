@@ -2,188 +2,882 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>菜单</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海南生态预测团队 · Team Console</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
-    background: #faf7f2;
-    color: #333;
-    padding-bottom: 40px;
-  }
-  header {
-    background: #b8341b;
-    color: #fff;
-    padding: 24px 16px;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  header h1 { font-size: 22px; letter-spacing: 2px; }
-  header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+:root {
+  --bg-page: #0e1410;
+  --bg-sidebar: #131b16;
+  --bg-main: #1a221d;
+  --bg-card: #232b26;
+  --bg-card-hover: #2a332e;
+  --bg-input: #161e19;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --text-primary: #e8ebe9;
+  --text-secondary: #a0a8a3;
+  --text-tertiary: #6c736e;
+  --accent: #5dcaa5;
+  --accent-dim: #1d9e75;
+  --user-bubble: #1f3a2e;
+  --user-text: #9fe1cb;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.35);
+  --radius: 10px;
+  --radius-lg: 14px;
 
-  .nav {
-    display: flex;
-    overflow-x: auto;
-    background: #fff;
-    border-bottom: 1px solid #eee;
-    position: sticky;
-    top: 80px;
-    z-index: 9;
-  }
-  .nav a {
-    flex-shrink: 0;
-    padding: 12px 18px;
-    color: #666;
-    text-decoration: none;
-    font-size: 14px;
-    border-bottom: 2px solid transparent;
-  }
-  .nav a.active { color: #b8341b; border-bottom-color: #b8341b; }
+  --c-tl: #8b80f0;     --c-tl-bg: rgba(139,128,240,0.12);
+  --c-ld: #5dcaa5;     --c-ld-bg: rgba(93,202,165,0.12);
+  --c-po: #6ba8e8;     --c-po-bg: rgba(107,168,232,0.12);
+  --c-so: #e8a653;     --c-so-bg: rgba(232,166,83,0.12);
+  --c-na: #82c46c;     --c-na-bg: rgba(130,196,108,0.12);
+  --c-ur: #e87aa8;     --c-ur-bg: rgba(232,122,168,0.12);
+  --c-sys: #888e8a;    --c-sys-bg: rgba(136,142,138,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
 
-  .category { padding: 16px; }
-  .category h2 {
-    font-size: 16px;
-    color: #b8341b;
-    margin-bottom: 12px;
-    padding-left: 8px;
-    border-left: 3px solid #b8341b;
-  }
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100vh;
+  width: 100vw;
+}
 
-  .dish {
-    display: flex;
-    background: #fff;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
-  .dish img {
-    width: 90px;
-    height: 90px;
-    border-radius: 6px;
-    object-fit: cover;
-    background: #eee;
-    flex-shrink: 0;
-  }
-  .dish-info { flex: 1; padding-left: 12px; display: flex; flex-direction: column; justify-content: space-between; }
-  .dish-name { font-size: 16px; font-weight: 500; }
-  .dish-desc { font-size: 12px; color: #999; margin-top: 4px; line-height: 1.5; }
-  .dish-bottom { display: flex; justify-content: space-between; align-items: center; }
-  .dish-price { color: #b8341b; font-size: 18px; font-weight: 600; }
-  .dish-price small { font-size: 12px; font-weight: normal; }
-  .tag {
-    display: inline-block;
-    font-size: 11px;
-    color: #b8341b;
-    background: #fdecec;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-right: 4px;
-  }
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.brand {
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-logo {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #5dcaa5, #1d9e75);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: #042c2a;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.brand-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+.section-label {
+  padding: 18px 22px 10px;
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  transition: background 0.15s;
+  cursor: default;
+}
+.member:hover { background: var(--bg-card); }
+
+.member-avatar {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.av-tl { background: var(--c-tl-bg); color: var(--c-tl); }
+.av-ld { background: var(--c-ld-bg); color: var(--c-ld); }
+.av-po { background: var(--c-po-bg); color: var(--c-po); }
+.av-so { background: var(--c-so-bg); color: var(--c-so); }
+.av-na { background: var(--c-na-bg); color: var(--c-na); }
+.av-ur { background: var(--c-ur-bg); color: var(--c-ur); }
+.av-sys{ background: var(--c-sys-bg); color: var(--c-sys); }
+
+.member-text { flex: 1; min-width: 0; }
+.member-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.member-role {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #555;
+  transition: all 0.25s;
+}
+.dot.on   { background: #5dcaa5; box-shadow: 0 0 0 4px rgba(93,202,165,0.15); }
+.dot.busy { background: #e8a653; box-shadow: 0 0 0 4px rgba(232,166,83,0.18); animation: pulse 1.4s ease-in-out infinite; }
+.dot.off  { background: #4a504c; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.85); }
+}
+
+.legend {
+  padding: 12px 22px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+.main {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-main);
+  overflow: hidden;
+}
+
+.topbar {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 14px;
+  background: var(--bg-main);
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.topbar-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.spacer { flex: 1; }
+.session-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+}
+.session-badge.active {
+  background: rgba(93,202,165,0.1);
+  color: var(--accent);
+  border-color: rgba(93,202,165,0.25);
+}
+.btn {
+  height: 32px;
+  padding: 0 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn:hover { background: var(--bg-card-hover); border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-danger {
+  background: rgba(232,75,75,0.08);
+  border-color: rgba(232,75,75,0.25);
+  color: #f0a0a0;
+}
+.btn-danger:hover {
+  background: rgba(232,75,75,0.16);
+  border-color: rgba(232,75,75,0.45);
+  color: #ffb3b3;
+}
+
+.chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 0;
+}
+.chat-inner {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-tertiary);
+}
+.empty-state h2 {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+.empty-state p {
+  font-size: 14px;
+  max-width: 480px;
+  margin: 0 auto 28px;
+  line-height: 1.7;
+}
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.suggestion {
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  line-height: 1.5;
+}
+.suggestion:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.msg-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-row.user { justify-content: flex-end; }
+
+.msg-avatar {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+.av-user { background: rgba(159,225,203,0.16); color: #9fe1cb; }
+
+.msg-body { max-width: 78%; min-width: 0; }
+.msg-row.user .msg-body { display: flex; flex-direction: column; align-items: flex-end; }
+
+.msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+.msg-speaker {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.msg-speaker.tl  { color: var(--c-tl); }
+.msg-speaker.ld  { color: var(--c-ld); }
+.msg-speaker.po  { color: var(--c-po); }
+.msg-speaker.so  { color: var(--c-so); }
+.msg-speaker.na  { color: var(--c-na); }
+.msg-speaker.ur  { color: var(--c-ur); }
+.msg-speaker.sys { color: var(--c-sys); }
+
+.msg-bubble {
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  line-height: 1.7;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--border);
+}
+.msg-row.user .msg-bubble {
+  background: var(--user-bubble);
+  color: var(--user-text);
+  border-color: rgba(93,202,165,0.2);
+  border-top-right-radius: 4px;
+}
+.msg-row.bot .msg-bubble {
+  border-top-left-radius: 4px;
+}
+.msg-bubble.thinking {
+  color: var(--text-tertiary);
+  font-style: italic;
+  background: transparent;
+  border-style: dashed;
+}
+.msg-bubble.error {
+  background: rgba(232,75,75,0.08);
+  border-color: rgba(232,75,75,0.25);
+  color: #f0a0a0;
+}
+.msg-bubble.system {
+  background: var(--c-sys-bg);
+  border-color: rgba(136,142,138,0.25);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  margin: 0 1.5px;
+  animation: bounce 1.2s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40%           { transform: scale(1.0); opacity: 1; }
+}
+
+.input-bar {
+  border-top: 1px solid var(--border);
+  background: var(--bg-main);
+  padding: 16px 32px 22px;
+  flex-shrink: 0;
+}
+.input-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  position: relative;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 12px 10px 18px;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+.input-wrap:focus-within { border-color: var(--border-strong); }
+textarea {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: none;
+  min-height: 24px;
+  max-height: 160px;
+  padding: 6px 0;
+}
+textarea::placeholder { color: var(--text-tertiary); }
+textarea.busy-warn::placeholder {
+  color: #e8a653;
+  animation: flash 0.6s ease-in-out 3;
+}
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.send-btn {
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  background: var(--accent-dim);
+  border: 0;
+  color: #02201a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.send-btn:hover { background: var(--accent); }
+.send-btn:disabled { background: var(--bg-card); color: var(--text-tertiary); cursor: not-allowed; }
+.send-btn svg { width: 16px; height: 16px; }
+.input-hint {
+  max-width: 920px;
+  margin: 8px auto 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.13); }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>胖哥家菜馆</h1>
-  <p>欢迎光临 · 请慢慢挑选</p>
-</header>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <div class="brand-logo">海</div>
+        <div>
+          <div class="brand-title">海南生态预测团队</div>
+          <div class="brand-sub">ECO TEAM CONSOLE</div>
+        </div>
+      </div>
+    </div>
 
-<nav class="nav" id="nav"></nav>
+    <div class="section-label">Team Members</div>
+    <div class="member-list">
+      <div class="member">
+        <div class="member-avatar av-tl">TL</div>
+        <div class="member-text">
+          <div class="member-name">Team-lead</div>
+          <div class="member-role">总协调人</div>
+        </div>
+        <div class="dot off" id="dot-team-lead"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-ld">LD</div>
+        <div class="member-text">
+          <div class="member-name">Leader</div>
+          <div class="member-role">调度 · 建模</div>
+        </div>
+        <div class="dot off" id="dot-leader"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-po">PO</div>
+        <div class="member-text">
+          <div class="member-name">政策研究员</div>
+          <div class="member-role">政策 · 规划</div>
+        </div>
+        <div class="dot off" id="dot-policy"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-so">SO</div>
+        <div class="member-text">
+          <div class="member-name">社会经济研究员</div>
+          <div class="member-role">价格 · 统计</div>
+        </div>
+        <div class="dot off" id="dot-socioeconomic"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-na">NA</div>
+        <div class="member-text">
+          <div class="member-name">自然环境研究员</div>
+          <div class="member-role">气候 · 生态</div>
+        </div>
+        <div class="dot off" id="dot-natural"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-ur">UR</div>
+        <div class="member-text">
+          <div class="member-name">城镇化研究员</div>
+          <div class="member-role">建设 · 自贸港</div>
+        </div>
+        <div class="dot off" id="dot-urbanization"></div>
+      </div>
+    </div>
 
-<main id="menu"></main>
+    <div class="legend">
+      <div class="legend-item"><span class="dot on"></span>在线</div>
+      <div class="legend-item"><span class="dot busy"></span>工作中</div>
+      <div class="legend-item"><span class="dot off"></span>离线</div>
+    </div>
+  </aside>
 
-<script>
-  // ====== 在这里编辑你的菜单数据 ======
-  const menuData = [
-    {
-      category: '招牌推荐',
-      dishes: [
-        { name: '宫保鸡丁', desc: '经典川菜，鸡肉嫩滑，花生酥脆', price: 38, tags: ['招牌'], img: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=200' },
-        { name: '红烧肉', desc: '肥而不腻，入口即化', price: 48, tags: ['热销'], img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200' },
-      ]
-    },
-    {
-      category: '热菜',
-      dishes: [
-        { name: '麻婆豆腐', desc: '麻辣鲜香，下饭神器', price: 22, tags: [], img: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=200' },
-        { name: '鱼香肉丝', desc: '酸甜微辣，传统味道', price: 32, tags: [], img: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=200' },
-        { name: '清炒时蔬', desc: '当季新鲜蔬菜', price: 18, tags: ['素'], img: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200' },
-      ]
-    },
-    {
-      category: '凉菜',
-      dishes: [
-        { name: '凉拌黄瓜', desc: '清爽开胃', price: 12, tags: [], img: 'https://images.unsplash.com/photo-1564093497595-593b96d80180?w=200' },
-        { name: '口水鸡', desc: '麻辣鲜香，皮脆肉嫩', price: 28, tags: ['辣'], img: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=200' },
-      ]
-    },
-    {
-      category: '主食',
-      dishes: [
-        { name: '米饭', desc: '东北珍珠米', price: 3, tags: [], img: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=200' },
-        { name: '葱油拌面', desc: '香气扑鼻', price: 15, tags: [], img: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=200' },
-      ]
-    },
-    {
-      category: '饮品',
-      dishes: [
-        { name: '可乐', desc: '冰镇', price: 8, tags: [], img: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=200' },
-        { name: '酸梅汤', desc: '自家熬制', price: 10, tags: ['推荐'], img: 'https://images.unsplash.com/photo-1546171753-97d7676e4602?w=200' },
-      ]
-    },
-  ];
-  // ====== 修改菜单只需要改上面这段 ======
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">AutoGen 群聊控制台</div>
+        <div class="topbar-meta">Leader 调度 · 按需启动研究员</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="session-badge" id="sess-badge">无会话</span>
+      <button class="btn" id="stopBtn" onclick="stopTask()" disabled title="中断当前进行中的群聊">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>停止任务
+      </button>
+      <button class="btn" onclick="newChat()" title="清空对话">新对话</button>
+      <button class="btn btn-danger" onclick="shutdownAll()" title="关闭整个后端服务">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>关闭系统
+      </button>
+    </div>
 
-  const nav = document.getElementById('nav');
-  const menu = document.getElementById('menu');
-
-  menuData.forEach((cat, i) => {
-    // 导航
-    const a = document.createElement('a');
-    a.href = '#cat-' + i;
-    a.textContent = cat.category;
-    if (i === 0) a.classList.add('active');
-    nav.appendChild(a);
-
-    // 分类区块
-    const section = document.createElement('section');
-    section.className = 'category';
-    section.id = 'cat-' + i;
-    section.innerHTML = `<h2>${cat.category}</h2>`;
-
-    cat.dishes.forEach(d => {
-      const tags = (d.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-      section.innerHTML += `
-        <div class="dish">
-          <img src="${d.img}" alt="${d.name}" onerror="this.style.background='#eee';this.src='';">
-          <div class="dish-info">
-            <div>
-              <div class="dish-name">${d.name}</div>
-              <div class="dish-desc">${d.desc || ''}</div>
-            </div>
-            <div class="dish-bottom">
-              <div>${tags}</div>
-              <div class="dish-price"><small>¥</small>${d.price}</div>
-            </div>
+    <div class="chat-scroll" id="chat-scroll">
+      <div class="chat-inner" id="chat-inner">
+        <div class="empty-state" id="empty-state">
+          <h2>欢迎使用海南生态预测团队</h2>
+          <p>启动时只有 Leader 在线，研究员按需启动。提出研究任务后，Leader 会判断需要派遣哪些专家。</p>
+          <div class="suggestions">
+            <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
+            <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势</button>
+            <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
+            <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
           </div>
         </div>
-      `;
-    });
-    menu.appendChild(section);
-  });
+      </div>
+    </div>
 
-  // 点击导航高亮
-  nav.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      nav.querySelectorAll('a').forEach(x => x.classList.remove('active'));
-      a.classList.add('active');
+    <div class="input-bar">
+      <div class="input-wrap">
+        <textarea id="inp" placeholder="向团队提问，Enter 发送，Shift+Enter 换行..." rows="1"></textarea>
+        <button class="send-btn" id="sbtn" onclick="send()" aria-label="发送">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">研究员按需启动，首次调用约需 5-10 秒冷启动时间。</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = 'https://shabby-onyx-fracture.ngrok-free.dev';
+let sid = '';
+let busy = false;
+
+const SPEAKER_INFO = {
+  TeamLead:      { tag: 'TL',  cls: 'tl',  avCls: 'av-tl',  label: 'Team-lead' },
+  Leader:        { tag: 'LD',  cls: 'ld',  avCls: 'av-ld',  label: 'Leader · 生态总督' },
+  Policy:        { tag: 'PO',  cls: 'po',  avCls: 'av-po',  label: '政策研究员' },
+  Socioeconomic: { tag: 'SO',  cls: 'so',  avCls: 'av-so',  label: '社会经济研究员' },
+  Natural:       { tag: 'NA',  cls: 'na',  avCls: 'av-na',  label: '自然环境研究员' },
+  Urbanization:  { tag: 'UR',  cls: 'ur',  avCls: 'av-ur',  label: '城镇化研究员' },
+  System:        { tag: '⚙',  cls: 'sys', avCls: 'av-sys', label: '系统', isSystem: true },
+};
+
+function fmtTime() {
+  return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function clearEmptyState() {
+  const e = document.getElementById('empty-state');
+  if (e) e.remove();
+}
+
+function addUserMsg(text) {
+  clearEmptyState();
+  const inner = document.getElementById('chat-inner');
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-speaker">你</span><span>${fmtTime()}</span></div>
+      <div class="msg-bubble"></div>
+    </div>
+    <div class="msg-avatar av-user">YOU</div>
+  `;
+  row.querySelector('.msg-bubble').textContent = text;
+  inner.appendChild(row);
+  scrollToEnd();
+}
+
+function addAgentMsg(speaker, content, opts = {}) {
+  clearEmptyState();
+  const info = SPEAKER_INFO[speaker] || { tag: speaker.slice(0,2).toUpperCase(), cls: 'sys', avCls: 'av-sys', label: speaker };
+  const inner = document.getElementById('chat-inner');
+  const row = document.createElement('div');
+  row.className = 'msg-row bot';
+  const bubbleCls = opts.cls || (info.isSystem ? 'system' : '');
+  row.innerHTML = `
+    <div class="msg-avatar ${info.avCls}">${info.tag}</div>
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-speaker ${info.cls}">${info.label}</span><span>${fmtTime()}</span></div>
+      <div class="msg-bubble ${bubbleCls}"></div>
+    </div>
+  `;
+  const bubble = row.querySelector('.msg-bubble');
+  if (opts.html) bubble.innerHTML = content;
+  else bubble.textContent = content;
+  inner.appendChild(row);
+  scrollToEnd();
+  return bubble;
+}
+
+function addThinking() {
+  return addAgentMsg('TeamLead', '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> 处理中', { cls: 'thinking', html: true });
+}
+
+function scrollToEnd() {
+  const s = document.getElementById('chat-scroll');
+  s.scrollTop = s.scrollHeight;
+}
+
+function quickSend(btn) {
+  document.getElementById('inp').value = btn.textContent;
+  send();
+}
+
+async function send() {
+  if (busy) {
+    // 给用户一个反馈,而不是默默吞掉
+    const inp = document.getElementById('inp');
+    const originalPlaceholder = inp.placeholder;
+    inp.placeholder = '⏳ 当前任务还没结束,请等待或点击"停止任务"';
+    inp.classList.add('busy-warn');
+    setTimeout(() => {
+      inp.placeholder = originalPlaceholder;
+      inp.classList.remove('busy-warn');
+    }, 2500);
+    return;
+  }
+  const inp = document.getElementById('inp');
+  const sbtn = document.getElementById('sbtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  inp.style.height = 'auto';
+  busy = true;
+  sbtn.disabled = true;
+  if (stopBtn) stopBtn.disabled = false;
+  addUserMsg(text);
+
+  const thinkingMsg = addThinking();
+  thinkingMsg.parentElement.parentElement.dataset.thinking = '1';
+
+  try {
+    const resp = await fetch(`${API}/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, session_id: sid }),
     });
-  });
+    if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let firstAgentArrived = false;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const chunk = buf.slice(0, idx).trim();
+        buf = buf.slice(idx + 2);
+        if (!chunk.startsWith('data:')) continue;
+        const payload = chunk.slice(5).trim();
+        if (payload === '[DONE]') break;
+        let obj;
+        try { obj = JSON.parse(payload); } catch (e) { continue; }
+
+        if (obj.session_id) {
+          sid = obj.session_id;
+          const badge = document.getElementById('sess-badge');
+          badge.textContent = '会话进行中';
+          badge.title = '会话 ID: ' + sid;
+          badge.className = 'session-badge active';
+          continue;
+        }
+        if (obj.error) {
+          const oldRow = document.querySelector('[data-thinking="1"]');
+          if (oldRow) oldRow.remove();
+          addAgentMsg('System', '出错：' + obj.error, { cls: 'error' });
+          continue;
+        }
+        if (obj.speaker && obj.content) {
+          if (!firstAgentArrived) {
+            firstAgentArrived = true;
+            const oldRow = document.querySelector('[data-thinking="1"]');
+            if (oldRow) oldRow.remove();
+          }
+          addAgentMsg(obj.speaker, obj.content);
+        }
+      }
+    }
+    const stillThinking = document.querySelector('[data-thinking="1"]');
+    if (stillThinking) {
+      stillThinking.remove();
+      addAgentMsg('System', '未收到团队回复，请重试', { cls: 'error' });
+    }
+  } catch (e) {
+    const oldRow = document.querySelector('[data-thinking="1"]');
+    if (oldRow) oldRow.remove();
+    addAgentMsg('System', '连接失败：' + e.message + '\n请确认 api.py 已启动 (端口 9000)', { cls: 'error' });
+  }
+  busy = false;
+  sbtn.disabled = false;
+  if (stopBtn) stopBtn.disabled = true;
+  inp.focus();
+}
+
+async function stopTask() {
+  if (!sid || !busy) return;
+  // 二次确认,避免误触
+  if (!confirm('确定要中断当前对话吗?\n\n• 正在工作的研究员会被强制杀掉\n• Leader 会立即重启\n• 对话历史保留,可以接着发新消息')) {
+    return;
+  }
+  const stopBtn = document.getElementById('stopBtn');
+  stopBtn.disabled = true;
+  stopBtn.textContent = '停止中...';
+  try {
+    const r = await fetch(`${API}/stop`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'stop', session_id: sid }),
+    });
+    const data = await r.json();
+    if (data.stopped) {
+      const killed = (data.killed || []).join(', ') || '无忙碌进程';
+      const leaderNote = data.leader_restarted ? ',Leader 已重启' : '';
+      addAgentMsg('System',
+        `已强制中断。已杀掉: ${killed}${leaderNote}。\n对话历史保留,可继续提问。`,
+        { cls: 'system' });
+    } else {
+      addAgentMsg('System', '没有可中断的任务。', { cls: 'system' });
+    }
+  } catch (e) {
+    addAgentMsg('System', '停止请求失败:' + e.message, { cls: 'error' });
+  }
+  // 移除等待中的 thinking 占位(如果有)
+  const stillThinking = document.querySelector('[data-thinking="1"]');
+  if (stillThinking) stillThinking.remove();
+  // 强制重置 busy 状态,让用户能立刻发新消息
+  busy = false;
+  document.getElementById('sbtn').disabled = false;
+  setTimeout(() => {
+    stopBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>停止任务`;
+  }, 500);
+}
+
+async function shutdownAll() {
+  if (!confirm('确定要关闭整个后端服务吗？\n\n• 所有子 Agent 都会停止\n• 当前对话会丢失\n• 必须重新运行 api.py 才能再用')) {
+    return;
+  }
+  try {
+    addAgentMsg('System', '正在关闭后端服务...', { cls: 'system' });
+    await fetch(`${API}/shutdown`, { method: 'POST' });
+  } catch (e) {}
+  setTimeout(() => {
+    addAgentMsg('System', '后端服务已关闭。如需重新使用，请在终端运行 python api.py。', { cls: 'error' });
+    document.getElementById('sbtn').disabled = true;
+    document.getElementById('stopBtn').disabled = true;
+    ['team-lead','leader','policy','socioeconomic','natural','urbanization'].forEach(k => {
+      const el = document.getElementById('dot-' + k);
+      if (el) el.className = 'dot off';
+    });
+  }, 1500);
+}
+
+async function newChat() {
+  if (sid) {
+    try {
+      await fetch(`${API}/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'reset', session_id: sid }),
+      });
+    } catch (e) {}
+  }
+  sid = '';
+  const badge = document.getElementById('sess-badge');
+  badge.textContent = '无会话';
+  badge.title = '';
+  badge.className = 'session-badge';
+  document.getElementById('chat-inner').innerHTML = `
+    <div class="empty-state" id="empty-state">
+      <h2>欢迎使用海南生态预测团队</h2>
+      <p>启动时只有 Leader 在线，研究员按需启动。提出研究任务后，Leader 会判断需要派遣哪些专家。</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
+        <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势</button>
+        <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
+        <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
+      </div>
+    </div>
+  `;
+}
+
+async function pollStatus() {
+  try {
+    const r = await fetch(`${API}/status`);
+    const data = await r.json();
+    ['team-lead','leader','policy','socioeconomic','natural','urbanization'].forEach(k => {
+      const el = document.getElementById('dot-' + k);
+      if (!el) return;
+      const a = data[k];
+      el.className = 'dot ' + (!a || !a.online ? 'off' : (a.busy ? 'busy' : 'on'));
+    });
+  } catch (e) {}
+}
+
+document.getElementById('inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+document.getElementById('inp').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+});
+
+setInterval(pollStatus, 2500);
+pollStatus();
 </script>
-
 </body>
 </html>
