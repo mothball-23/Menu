@@ -703,7 +703,10 @@ async function send() {
   try {
     const resp = await fetch(`${API}/chat/stream`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
       body: JSON.stringify({ message: text, session_id: sid }),
     });
     if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
@@ -780,7 +783,10 @@ async function stopTask() {
   try {
     const r = await fetch(`${API}/stop`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
       body: JSON.stringify({ message: 'stop', session_id: sid }),
     });
     const data = await r.json();
@@ -813,7 +819,10 @@ async function shutdownAll() {
   }
   try {
     addAgentMsg('System', '正在关闭后端服务...', { cls: 'system' });
-    await fetch(`${API}/shutdown`, { method: 'POST' });
+    await fetch(`${API}/shutdown`, {
+      method: 'POST',
+      headers: { 'ngrok-skip-browser-warning': 'true' },
+    });
   } catch (e) {}
   setTimeout(() => {
     addAgentMsg('System', '后端服务已关闭。如需重新使用，请在终端运行 python api.py。', { cls: 'error' });
@@ -831,7 +840,10 @@ async function newChat() {
     try {
       await fetch(`${API}/reset`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
         body: JSON.stringify({ message: 'reset', session_id: sid }),
       });
     } catch (e) {}
@@ -857,7 +869,10 @@ async function newChat() {
 
 async function pollStatus() {
   try {
-    const r = await fetch(`${API}/status`);
+    const r = await fetch(`${API}/status`, {
+      headers: { 'ngrok-skip-browser-warning': 'true' }
+    });
+    if (!r.ok) return;
     const data = await r.json();
     ['team-lead','leader','policy','socioeconomic','natural','urbanization'].forEach(k => {
       const el = document.getElementById('dot-' + k);
@@ -865,7 +880,9 @@ async function pollStatus() {
       const a = data[k];
       el.className = 'dot ' + (!a || !a.online ? 'off' : (a.busy ? 'busy' : 'on'));
     });
-  } catch (e) {}
+  } catch (e) {
+    // 静默失败,不影响主功能
+  }
 }
 
 document.getElementById('inp').addEventListener('keydown', e => {
