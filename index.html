@@ -1,1084 +1,900 @@
-"""
-Hainan Eco Team — Main API (最终版)
-"""
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海南生态预测团队 · Team Console</title>
+<style>
+:root {
+  --bg-page: #0e1410;
+  --bg-sidebar: #131b16;
+  --bg-main: #1a221d;
+  --bg-card: #232b26;
+  --bg-card-hover: #2a332e;
+  --bg-input: #161e19;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --text-primary: #e8ebe9;
+  --text-secondary: #a0a8a3;
+  --text-tertiary: #6c736e;
+  --accent: #5dcaa5;
+  --accent-dim: #1d9e75;
+  --user-bubble: #1f3a2e;
+  --user-text: #9fe1cb;
+  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.35);
+  --radius: 10px;
+  --radius-lg: 14px;
 
-import os
-import re
-import sys
-import asyncio
-import uuid
-import json
-import logging
-import subprocess
-import signal
-import time
-from typing import Dict, List, Sequence, Optional, Tuple
-from contextlib import asynccontextmanager
-from pathlib import Path
-
-import httpx
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request as StarletteRequest
-from starlette.responses import Response as StarletteResponse
-from pydantic import BaseModel
-
-from autogen_core.models import SystemMessage, UserMessage, AssistantMessage
-from autogen_ext.models.openai import OpenAIChatCompletionClient
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
-log = logging.getLogger("hn-team")
-
-# ─────────────────────────────────────────────
-# Config
-# ─────────────────────────────────────────────
-DEEPSEEK_API_KEY = os.environ.get(
-    "DEEPSEEK_API_KEY", "sk-a201d7edbd044d2eb371e09bef62f865"
-)
-
-PROJECT_ROOT = Path(__file__).parent.resolve()
-LOG_DIR = PROJECT_ROOT / "_logs"
-LOG_DIR.mkdir(exist_ok=True)
-
-SUBAGENT_BASE = Path(r"E:\HN\team")
-
-RESEARCHER_IDLE_TIMEOUT = 600
-SUPERVISOR_INTERVAL     = 60
-MAX_GROUPCHAT_ROUNDS    = 5
-
-SUBAGENT_CONFIG = {
-    "leader": {
-        "name": "leader", "dir": "leader", "port": 8001,
-        "bootstrap": True,
-    },
-    "policy": {
-        "name": "researcher-policy", "dir": "researcher-policy", "port": 8002,
-        "bootstrap": False,
-    },
-    "socioeconomic": {
-        "name": "researcher-socioeconomic", "dir": "researcher-socioeconomic", "port": 8003,
-        "bootstrap": False,
-    },
-    "natural": {
-        "name": "researcher-natural", "dir": "researcher-natural", "port": 8004,
-        "bootstrap": False,
-    },
-    "urbanization": {
-        "name": "researcher-urbanization", "dir": "researcher-urbanization", "port": 8005,
-        "bootstrap": False,
-    },
+  --c-tl: #8b80f0;     --c-tl-bg: rgba(139,128,240,0.12);
+  --c-ld: #5dcaa5;     --c-ld-bg: rgba(93,202,165,0.12);
+  --c-po: #6ba8e8;     --c-po-bg: rgba(107,168,232,0.12);
+  --c-so: #e8a653;     --c-so-bg: rgba(232,166,83,0.12);
+  --c-na: #82c46c;     --c-na-bg: rgba(130,196,108,0.12);
+  --c-ur: #e87aa8;     --c-ur-bg: rgba(232,122,168,0.12);
+  --c-sys: #888e8a;    --c-sys-bg: rgba(136,142,138,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-# ── 唯一需要改的地方：label 显示名 ──────────────────────────────────
-AGENT_META = {
-    "TeamLead": {
-        "key": "team-lead", "label": "🧭 Team-lead",
-        "system": (
-            "你是海南省生态预测团队的 TeamLead（总协调人）。\n"
-            "职责：理解用户需求，转给对应研究员，汇总结果。\n"
-            "直接输出内容，不要加 '[Team-lead]:' 前缀。\n"
-            "简洁有力，不废话。"
-        ),
-    },
-    "Policy":        {"key": "policy",        "label": "📜 改革发展研究员"},
-    "Socioeconomic": {"key": "socioeconomic", "label": "💰 社会经济研究员"},
-    "Natural":       {"key": "natural",       "label": "🌿 生态环境研究员"},
-    "Urbanization":  {"key": "urbanization",  "label": "🏙️ 城镇资规研究员"},
-    "Leader":        {"key": "leader",        "label": "📊 Leader（生态总督）"},
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100vh;
+  width: 100vw;
 }
 
-NAME_TO_KEY = {
-    "Policy": "policy", "Socioeconomic": "socioeconomic",
-    "Natural": "natural", "Urbanization": "urbanization", "Leader": "leader",
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+.brand {
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-logo {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #5dcaa5, #1d9e75);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: #042c2a;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.brand-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
 
-# ─────────────────────────────────────────────
-# Agent 进程管理
-# ─────────────────────────────────────────────
-class AgentProcess:
-    def __init__(self, key: str):
-        self.key       = key
-        cfg            = SUBAGENT_CONFIG[key]
-        self.name      = cfg["name"]
-        self.port      = cfg["port"]
-        self.dir       = SUBAGENT_BASE / cfg["dir"]
-        self.bootstrap = cfg["bootstrap"]
+.section-label {
+  padding: 18px 22px 10px;
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
 
-        self.proc: Optional[subprocess.Popen] = None
-        self.log_file    = None
-        self.ever_healthy = False
-        self.last_used    = 0.0
-        self.busy         = False
-        self.spawn_lock   = asyncio.Lock()
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 12px;
+  flex: 1;
+  overflow-y: auto;
+}
 
-    def is_alive(self) -> bool:
-        return self.proc is not None and self.proc.poll() is None
+.member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  transition: background 0.15s;
+  cursor: default;
+}
+.member:hover { background: var(--bg-card); }
 
-    def status_for_ui(self) -> Dict:
-        alive = self.is_alive()
-        return {
-            "online": alive and self.ever_healthy,
-            "busy":   alive and self.busy,
+.member-avatar {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.av-tl { background: var(--c-tl-bg); color: var(--c-tl); }
+.av-ld { background: var(--c-ld-bg); color: var(--c-ld); }
+.av-po { background: var(--c-po-bg); color: var(--c-po); }
+.av-so { background: var(--c-so-bg); color: var(--c-so); }
+.av-na { background: var(--c-na-bg); color: var(--c-na); }
+.av-ur { background: var(--c-ur-bg); color: var(--c-ur); }
+.av-sys{ background: var(--c-sys-bg); color: var(--c-sys); }
+
+.member-text { flex: 1; min-width: 0; }
+.member-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.member-role {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #555;
+  transition: all 0.25s;
+}
+.dot.on   { background: #5dcaa5; box-shadow: 0 0 0 4px rgba(93,202,165,0.15); }
+.dot.busy { background: #e8a653; box-shadow: 0 0 0 4px rgba(232,166,83,0.18); animation: pulse 1.4s ease-in-out infinite; }
+.dot.off  { background: #4a504c; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.85); }
+}
+
+.legend {
+  padding: 12px 22px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+.main {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-main);
+  overflow: hidden;
+}
+
+.topbar {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 14px;
+  background: var(--bg-main);
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.topbar-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.spacer { flex: 1; }
+.session-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+}
+.session-badge.active {
+  background: rgba(93,202,165,0.1);
+  color: var(--accent);
+  border-color: rgba(93,202,165,0.25);
+}
+.btn {
+  height: 32px;
+  padding: 0 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn:hover { background: var(--bg-card-hover); border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-danger {
+  background: rgba(232,75,75,0.08);
+  border-color: rgba(232,75,75,0.25);
+  color: #f0a0a0;
+}
+.btn-danger:hover {
+  background: rgba(232,75,75,0.16);
+  border-color: rgba(232,75,75,0.45);
+  color: #ffb3b3;
+}
+
+.chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 0;
+}
+.chat-inner {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-tertiary);
+}
+.empty-state h2 {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+.empty-state p {
+  font-size: 14px;
+  max-width: 480px;
+  margin: 0 auto 28px;
+  line-height: 1.7;
+}
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.suggestion {
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  line-height: 1.5;
+}
+.suggestion:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.msg-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-row.user { justify-content: flex-end; }
+
+.msg-avatar {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+.av-user { background: rgba(159,225,203,0.16); color: #9fe1cb; }
+
+.msg-body { max-width: 78%; min-width: 0; }
+.msg-row.user .msg-body { display: flex; flex-direction: column; align-items: flex-end; }
+
+.msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+.msg-speaker {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.msg-speaker.tl  { color: var(--c-tl); }
+.msg-speaker.ld  { color: var(--c-ld); }
+.msg-speaker.po  { color: var(--c-po); }
+.msg-speaker.so  { color: var(--c-so); }
+.msg-speaker.na  { color: var(--c-na); }
+.msg-speaker.ur  { color: var(--c-ur); }
+.msg-speaker.sys { color: var(--c-sys); }
+
+.msg-bubble {
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  line-height: 1.7;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--border);
+}
+.msg-row.user .msg-bubble {
+  background: var(--user-bubble);
+  color: var(--user-text);
+  border-color: rgba(93,202,165,0.2);
+  border-top-right-radius: 4px;
+}
+.msg-row.bot .msg-bubble {
+  border-top-left-radius: 4px;
+}
+.msg-bubble.thinking {
+  color: var(--text-tertiary);
+  font-style: italic;
+  background: transparent;
+  border-style: dashed;
+}
+.msg-bubble.error {
+  background: rgba(232,75,75,0.08);
+  border-color: rgba(232,75,75,0.25);
+  color: #f0a0a0;
+}
+.msg-bubble.system {
+  background: var(--c-sys-bg);
+  border-color: rgba(136,142,138,0.25);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  margin: 0 1.5px;
+  animation: bounce 1.2s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40%           { transform: scale(1.0); opacity: 1; }
+}
+
+.input-bar {
+  border-top: 1px solid var(--border);
+  background: var(--bg-main);
+  padding: 16px 32px 22px;
+  flex-shrink: 0;
+}
+.input-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  position: relative;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 12px 10px 18px;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+.input-wrap:focus-within { border-color: var(--border-strong); }
+textarea {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: none;
+  min-height: 24px;
+  max-height: 160px;
+  padding: 6px 0;
+}
+textarea::placeholder { color: var(--text-tertiary); }
+textarea.busy-warn::placeholder {
+  color: #e8a653;
+  animation: flash 0.6s ease-in-out 3;
+}
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.send-btn {
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  background: var(--accent-dim);
+  border: 0;
+  color: #02201a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.send-btn:hover { background: var(--accent); }
+.send-btn:disabled { background: var(--bg-card); color: var(--text-tertiary); cursor: not-allowed; }
+.send-btn svg { width: 16px; height: 16px; }
+.input-hint {
+  max-width: 920px;
+  margin: 8px auto 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.13); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <div class="brand-logo">海</div>
+        <div>
+          <div class="brand-title">海南生态预测团队</div>
+          <div class="brand-sub">ECO TEAM CONSOLE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Team Members</div>
+    <div class="member-list">
+      <div class="member">
+        <div class="member-avatar av-tl">TL</div>
+        <div class="member-text">
+          <div class="member-name">🧭 Team-lead</div>
+          <div class="member-role">总协调人</div>
+        </div>
+        <div class="dot off" id="dot-team-leader"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-ld">LD</div>
+        <div class="member-text">
+          <div class="member-name">📊 Leader（生态总督）</div>
+          <div class="member-role">调度 · 评估 · 汇总</div>
+        </div>
+        <div class="dot off" id="dot-leader"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-po">PO</div>
+        <div class="member-text">
+          <div class="member-name">📜 改革发展研究员</div>
+          <div class="member-role">耕地红线 · 国土规划 · 政策</div>
+        </div>
+        <div class="dot off" id="dot-policy"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-so">SO</div>
+        <div class="member-text">
+          <div class="member-name">💰 社会经济研究员</div>
+          <div class="member-role">作物价格 · 农民收入 · 撂荒</div>
+        </div>
+        <div class="dot off" id="dot-socioeconomic"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-na">NA</div>
+        <div class="member-text">
+          <div class="member-name">🌿 生态环境研究员</div>
+          <div class="member-role">台风 · 气候 · 热带雨林</div>
+        </div>
+        <div class="dot off" id="dot-natural"></div>
+      </div>
+      <div class="member">
+        <div class="member-avatar av-ur">UR</div>
+        <div class="member-text">
+          <div class="member-name">🏙️ 城镇资规研究员</div>
+          <div class="member-role">城镇化 · 建设用地 · 自贸港</div>
+        </div>
+        <div class="dot off" id="dot-urbanization"></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot on"></span>在线</div>
+      <div class="legend-item"><span class="dot busy"></span>工作中</div>
+      <div class="legend-item"><span class="dot off"></span>离线</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">AutoGen 群聊控制台</div>
+        <div class="topbar-meta">Leader 调度 · 多轮群聊讨论</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="session-badge" id="sess-badge">无会话</span>
+      <button class="btn" id="stopBtn" onclick="stopTask()" disabled title="中断当前进行中的群聊">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>停止任务
+      </button>
+      <button class="btn" onclick="newChat()" title="清空对话">新对话</button>
+      <button class="btn btn-danger" onclick="shutdownAll()" title="关闭整个后端服务">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>关闭系统
+      </button>
+    </div>
+
+    <div class="chat-scroll" id="chat-scroll">
+      <div class="chat-inner" id="chat-inner">
+        <div class="empty-state" id="empty-state">
+          <h2>欢迎使用海南生态预测团队</h2>
+          <p>团队成员已就位。提出研究任务后，Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
+          <div class="suggestions">
+            <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
+            <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势</button>
+            <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
+            <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <div class="input-wrap">
+        <textarea id="inp" placeholder="向团队提问，Enter 发送，Shift+Enter 换行..." rows="1"></textarea>
+        <button class="send-btn" id="sbtn" onclick="send()" aria-label="发送">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">研究类问题会触发多轮群聊，可能需要一两分钟，请耐心等待。</div>
+    </div>
+  </main>
+</div>
+
+<script>
+// API 地址自适应：通过 http(s) 访问时用当前源；直接打开文件时退回 localhost:9000
+const API = (location.protocol === 'http:' || location.protocol === 'https:')
+  ? location.origin
+  : 'http://localhost:9000';
+
+let sid = '';
+let busy = false;
+
+// key 与后端推送的 speaker 字段完全对齐（研究员为小写）
+const SPEAKER_INFO = {
+  TeamLead:      { tag: 'TL',  cls: 'tl',  avCls: 'av-tl',  label: '🧭 Team-lead' },
+  Leader:        { tag: 'LD',  cls: 'ld',  avCls: 'av-ld',  label: '📊 Leader（生态总督）' },
+  policy:        { tag: 'PO',  cls: 'po',  avCls: 'av-po',  label: '📜 改革发展研究员' },
+  socioeconomic: { tag: 'SO',  cls: 'so',  avCls: 'av-so',  label: '💰 社会经济研究员' },
+  natural:       { tag: 'NA',  cls: 'na',  avCls: 'av-na',  label: '🌿 生态环境研究员' },
+  urbanization:  { tag: 'UR',  cls: 'ur',  avCls: 'av-ur',  label: '🏙️ 城镇资规研究员' },
+  System:        { tag: '⚙',  cls: 'sys', avCls: 'av-sys', label: '系统', isSystem: true },
+};
+
+// 状态轮询对应的 key（与 /status 返回的 key 一致）
+const STATUS_KEYS = ['team-leader', 'leader', 'policy', 'socioeconomic', 'natural', 'urbanization'];
+
+function fmtTime() {
+  return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function clearEmptyState() {
+  const e = document.getElementById('empty-state');
+  if (e) e.remove();
+}
+
+function addUserMsg(text) {
+  clearEmptyState();
+  const inner = document.getElementById('chat-inner');
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-speaker">你</span><span>${fmtTime()}</span></div>
+      <div class="msg-bubble"></div>
+    </div>
+    <div class="msg-avatar av-user">YOU</div>
+  `;
+  row.querySelector('.msg-bubble').textContent = text;
+  inner.appendChild(row);
+  scrollToEnd();
+}
+
+function addAgentMsg(speaker, content, opts = {}) {
+  clearEmptyState();
+  const info = SPEAKER_INFO[speaker] || { tag: speaker.slice(0,2).toUpperCase(), cls: 'sys', avCls: 'av-sys', label: speaker };
+  const inner = document.getElementById('chat-inner');
+  const row = document.createElement('div');
+  row.className = 'msg-row bot';
+  const bubbleCls = opts.cls || (info.isSystem ? 'system' : '');
+  row.innerHTML = `
+    <div class="msg-avatar ${info.avCls}">${info.tag}</div>
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-speaker ${info.cls}">${info.label}</span><span>${fmtTime()}</span></div>
+      <div class="msg-bubble ${bubbleCls}"></div>
+    </div>
+  `;
+  const bubble = row.querySelector('.msg-bubble');
+  if (opts.html) bubble.innerHTML = content;
+  else bubble.textContent = content;
+  inner.appendChild(row);
+  scrollToEnd();
+  return bubble;
+}
+
+function addThinking() {
+  return addAgentMsg('TeamLead', '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> 处理中', { cls: 'thinking', html: true });
+}
+
+function scrollToEnd() {
+  const s = document.getElementById('chat-scroll');
+  s.scrollTop = s.scrollHeight;
+}
+
+function quickSend(btn) {
+  document.getElementById('inp').value = btn.textContent;
+  send();
+}
+
+async function send() {
+  if (busy) {
+    const inp = document.getElementById('inp');
+    const originalPlaceholder = inp.placeholder;
+    inp.placeholder = '⏳ 当前任务还没结束，请等待或点击「停止任务」';
+    inp.classList.add('busy-warn');
+    setTimeout(() => {
+      inp.placeholder = originalPlaceholder;
+      inp.classList.remove('busy-warn');
+    }, 2500);
+    return;
+  }
+  const inp = document.getElementById('inp');
+  const sbtn = document.getElementById('sbtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  inp.style.height = 'auto';
+  busy = true;
+  sbtn.disabled = true;
+  if (stopBtn) stopBtn.disabled = false;
+  addUserMsg(text);
+
+  const thinkingMsg = addThinking();
+  thinkingMsg.parentElement.parentElement.dataset.thinking = '1';
+
+  try {
+    const resp = await fetch(`${API}/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: JSON.stringify({ message: text, session_id: sid }),
+    });
+    if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let firstAgentArrived = false;
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const chunk = buf.slice(0, idx).trim();
+        buf = buf.slice(idx + 2);
+        if (!chunk.startsWith('data:')) continue;
+        const payload = chunk.slice(5).trim();
+        if (payload === '[DONE]') break;
+        let obj;
+        try { obj = JSON.parse(payload); } catch (e) { continue; }
+
+        if (obj.session_id) {
+          sid = obj.session_id;
+          const badge = document.getElementById('sess-badge');
+          badge.textContent = '会话进行中';
+          badge.title = '会话 ID: ' + sid;
+          badge.className = 'session-badge active';
+          continue;
         }
-
-    async def spawn(self) -> bool:
-        async with self.spawn_lock:
-            if self.is_alive():
-                return True
-            if not self.dir.exists():
-                log.error(f"  X DIR NOT FOUND: {self.dir}")
-                return False
-            if not (self.dir / "main.py").exists():
-                log.error(f"  X NO main.py IN: {self.dir}")
-                return False
-
-            _kill_port(self.port)
-            log_path  = LOG_DIR / f"{self.name}.log"
-            self.log_file = open(log_path, "w", encoding="utf-8", buffering=1)
-
-            cf = subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform.startswith("win") else 0
-            self.proc = subprocess.Popen(
-                [sys.executable, "-u", "main.py"],
-                cwd=str(self.dir),
-                stdout=self.log_file,
-                stderr=subprocess.STDOUT,
-                creationflags=cf,
-            )
-            self.ever_healthy = False
-            log.info(f"  spawned {self.name} pid={self.proc.pid} port={self.port}")
-
-            deadline = time.time() + 30
-            while time.time() < deadline:
-                if not self.is_alive():
-                    log.error(f"  X {self.name} exited during startup code={self.proc.returncode}")
-                    return False
-                try:
-                    async with httpx.AsyncClient(timeout=2) as c:
-                        r = await c.get(f"http://127.0.0.1:{self.port}/health")
-                        if r.status_code == 200:
-                            self.ever_healthy = True
-                            log.info(f"  OK {self.name}")
-                            return True
-                except Exception:
-                    pass
-                await asyncio.sleep(1)
-            log.error(f"  X {self.name} did not become healthy within 30s")
-            return False
-
-    def shutdown(self):
-        if not self.is_alive():
-            return
-        try:
-            if sys.platform.startswith("win"):
-                self.proc.send_signal(signal.CTRL_BREAK_EVENT)
-            else:
-                self.proc.terminate()
-        except Exception:
-            pass
-        try:
-            self.proc.wait(timeout=3)
-        except Exception:
-            try:
-                self.proc.kill()
-            except Exception:
-                pass
-        _kill_port(self.port)
-        if self.log_file:
-            try:
-                self.log_file.close()
-            except Exception:
-                pass
-            self.log_file = None
-        self.ever_healthy = False
-        self.busy = False
-        log.info(f"  stopped {self.name}")
-
-
-agents: Dict[str, AgentProcess] = {}
-
-
-def _kill_port(port: int) -> bool:
-    if not sys.platform.startswith("win"):
-        return False
-    try:
-        out = subprocess.check_output(
-            f'netstat -ano | findstr ":{port} "',
-            shell=True, encoding="gbk", errors="ignore",
-        )
-    except subprocess.CalledProcessError:
-        return False
-    pids = set()
-    for line in out.splitlines():
-        if "LISTENING" in line.upper():
-            parts = line.split()
-            if parts and parts[-1].isdigit():
-                pids.add(parts[-1])
-    for pid in pids:
-        try:
-            subprocess.run(["taskkill", "/F", "/PID", pid], capture_output=True, check=False)
-            log.info(f"  killed PID={pid} on port {port}")
-        except Exception:
-            pass
-    return bool(pids)
-
-
-# ─────────────────────────────────────────────
-# 后台维护循环
-# ─────────────────────────────────────────────
-async def supervisor_loop():
-    while True:
-        try:
-            await asyncio.sleep(SUPERVISOR_INTERVAL)
-            now = time.time()
-            for key, agent in agents.items():
-                if agent.bootstrap and not agent.is_alive():
-                    log.warning(f"supervisor: {agent.name} dead, restarting")
-                    await agent.spawn()
-                    continue
-                if not agent.bootstrap and agent.is_alive() and not agent.busy:
-                    if agent.last_used and (now - agent.last_used) > RESEARCHER_IDLE_TIMEOUT:
-                        log.info(f"supervisor: {agent.name} idle > {RESEARCHER_IDLE_TIMEOUT}s, shutting down")
-                        agent.shutdown()
-        except asyncio.CancelledError:
-            break
-        except Exception as e:
-            log.exception(f"supervisor error: {e}")
-
-
-# ─────────────────────────────────────────────
-# State
-# ─────────────────────────────────────────────
-busy_team_lead: bool = False
-sessions: Dict[str, "SessionCtx"] = {}
-
-
-class SessionCtx:
-    def __init__(self):
-        self.claude_sessions: Dict[str, str] = {}
-        self.history: List[Tuple[str, str]] = []
-        self.lock = asyncio.Lock()
-        self.cancel = asyncio.Event()
-
-
-# ─────────────────────────────────────────────
-# DeepSeek LLM (TeamLead)
-# ─────────────────────────────────────────────
-_llm: Optional[OpenAIChatCompletionClient] = None
-
-def get_llm() -> OpenAIChatCompletionClient:
-    global _llm
-    if _llm is None:
-        _llm = OpenAIChatCompletionClient(
-            model="deepseek-v4-flash",
-            api_key=DEEPSEEK_API_KEY,
-            base_url="https://api.deepseek.com",
-            model_info={
-                "vision": False, "function_calling": False,
-                "json_output": False, "family": "unknown",
-                "structured_output": False,
-            },
-        )
-    return _llm
-
-
-# ─────────────────────────────────────────────
-# TeamLead
-# ─────────────────────────────────────────────
-_LABEL_PREFIX_RE = re.compile(
-    r"^\s*\[?\s*[🧭📊📜💰🌿🏙️]*\s*Team[- ]?lead\s*\]?\s*[:：]\s*",
-    re.IGNORECASE,
-)
-
-async def teamlead_call(task: str, ctx: SessionCtx) -> str:
-    global busy_team_lead
-    meta = AGENT_META["TeamLead"]
-    messages: List = [SystemMessage(content=meta["system"])]
-    for speaker, content in ctx.history[-8:]:
-        if speaker == "user":
-            messages.append(UserMessage(content=content, source="user"))
-        elif speaker == "TeamLead":
-            messages.append(AssistantMessage(content=content, source="TeamLead"))
-        else:
-            label = AGENT_META.get(speaker, {}).get("label", speaker)
-            messages.append(UserMessage(
-                content=f"【{label} 的报告】\n{content}", source=speaker,
-            ))
-    messages.append(UserMessage(content=task, source="user"))
-
-    busy_team_lead = True
-    try:
-        result = await get_llm().create(messages)
-        reply = (result.content if isinstance(result.content, str) else str(result.content)).strip()
-        reply = _LABEL_PREFIX_RE.sub("", reply).strip()
-        return reply
-    except Exception as e:
-        log.error(f"TeamLead failed: {e}")
-        return f"[TeamLead 调用失败: {e}]"
-    finally:
-        busy_team_lead = False
-
-
-# ─────────────────────────────────────────────
-# 失败回复识别
-# ─────────────────────────────────────────────
-_FAILURE_KEYWORDS = (
-    "连接失败", "超时", "启动失败", "OFFLINE", "HTTP", "未知 agent",
-    "non-JSON", "TIMEOUT", "调用失败", "已取消", "错误:",
-)
-
-def is_failure_reply(reply: str) -> bool:
-    if not reply or reply.strip() in ("", "(空回复)"):
-        return True
-    s = reply.strip()
-    if s.startswith("[") and any(kw in s[:120] for kw in _FAILURE_KEYWORDS):
-        return True
-    return False
-
-
-# ─────────────────────────────────────────────
-# Claude Code call
-# ─────────────────────────────────────────────
-async def claude_code_call(
-    agent_name: str, prompt: str, ctx: SessionCtx,
-    timeout: float = 600.0, use_session: bool = True,
-) -> str:
-    key = NAME_TO_KEY.get(agent_name)
-    if not key:
-        return f"[{agent_name} 未知 agent]"
-
-    if ctx.cancel.is_set():
-        return f"[{agent_name} 已取消]"
-
-    agent = agents[key]
-    if not agent.is_alive():
-        ok = await agent.spawn()
-        if not ok:
-            return f"[{agent_name} 启动失败] 请查 _logs/{agent.name}.log"
-        if ctx.cancel.is_set():
-            return f"[{agent_name} 已取消]"
-
-    agent.busy = True
-    agent.last_used = time.time()
-    try:
-        session_id = ctx.claude_sessions.get(key, "") if use_session else ""
-        log.info(f"  -> {agent_name} port={agent.port}")
-
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            try:
-                resp = await asyncio.wait_for(
-                    client.post(
-                        f"http://127.0.0.1:{agent.port}/chat",
-                        json={"message": prompt, "session_id": session_id},
-                    ),
-                    timeout=timeout,
-                )
-            except asyncio.TimeoutError:
-                return f"[{agent_name} 超时]"
-            except httpx.ConnectError:
-                return f"[{agent_name} 连接失败]"
-            except httpx.TimeoutException:
-                return f"[{agent_name} 超时]"
-            except asyncio.CancelledError:
-                return f"[{agent_name} 已取消]"
-            except Exception as e:
-                return f"[{agent_name} 错误: {type(e).__name__}]"
-
-            if resp.status_code != 200:
-                return f"[{agent_name} HTTP {resp.status_code}]"
-            try:
-                data = resp.json()
-            except Exception:
-                return f"[{agent_name} non-JSON]"
-
-            reply   = (data.get("reply") or "").strip()
-            new_sid = data.get("session_id", "")
-            if new_sid and use_session:
-                ctx.claude_sessions[key] = new_sid
-            log.info(f"  <- {agent_name} ({len(reply)} chars) preview={reply[:80]!r}")
-            return reply or "(空回复)"
-    finally:
-        agent.busy = False
-        agent.last_used = time.time()
-
-
-# ─────────────────────────────────────────────
-# Leader 调度 Prompts
-# ─────────────────────────────────────────────
-LEADER_DISPATCH_INITIAL = """[调度模式 - 初始派遣 - 不要执行工具调用]
-
-用户任务: {task}
-
-可用研究员:
-- Policy        改革发展、耕地红线、永久基本农田、国土空间规划、补贴、自贸港政策
-- Socioeconomic 财政经济、槟榔/橡胶/椰子/芒果价格、农民收入、外出务工、撂荒耕地、农资使用
-- Natural       台风、气候、降水、森林覆盖、热带雨林、灾害、生态系统、碳汇
-- Urbanization  城镇资规、城镇化率、建设用地、自贸港园区、新增建设、开发区
-
-判断需要哪些研究员，严格输出 JSON 一行，无任何解释:
-{{"need": ["Policy", "Natural"]}}
-
-简单任务不需要研究员则输出: {{"need": []}}
-"""
-
-LEADER_EVALUATE = """[调度模式 - 群聊评估 - 不要执行工具调用]
-
-用户任务: {task}
-
-当前第 {round_num} 轮（最多 {max_rounds} 轮）。各研究员发言记录:
-
-{transcript}
-
-评估：是否有分歧需要澄清？是否有关键数据缺失？是否可以汇总？
-
-严格输出 JSON 一行，无任何解释。两种动作:
-
-继续讨论: {{"action":"continue","ask":[{{"who":"Policy","question":"具体问题"}},{{"who":"Socioeconomic","question":"具体问题"}}]}}
-可以汇总: {{"action":"summarize"}}
-
-规则:
-- who 只能是 Policy/Socioeconomic/Natural/Urbanization
-- 已是第 {max_rounds} 轮 → 必须 summarize
-- 如果任务含"预测/建模/趋势/分析"且是第 1 轮 → 优先 continue
-- 没有明确分歧或新问题 → summarize
-- question 必须具体可回答，不要笼统
-"""
-
-LEADER_SUMMARIZE = """[汇总模式]
-
-你的任务: 阅读下面的群聊讨论记录，综合输出最终结论。
-讨论记录就在本消息中，不要说"没收到内容"。
-
-用户任务:
-{task}
-
-经过 {round_count} 轮讨论，各研究员发言记录:
-
------ 讨论记录 开始 -----
-{transcript}
------ 讨论记录 结束 -----
-
-基于上述记录，按以下结构输出（400字内，不要执行任何工具调用）:
-
-## 综合结论
-[核心预测/答案 + 置信度]
-
-## 关键驱动因素
-1. [来自哪位研究员 + 数据要点]
-2. ...
-
-## 不确定性来源
-- [数据缺失/分歧未解决/研究员调用失败]
-
-## 后续建议
-- [需要补充什么数据/调研]
-"""
-
-
-def extract_json(text: str) -> Optional[dict]:
-    if not text:
-        return None
-    text = text.strip()
-    text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-    l, r = text.find("{"), text.rfind("}")
-    if l < 0 or r <= l:
-        return None
-    try:
-        return json.loads(text[l:r+1])
-    except json.JSONDecodeError:
-        return None
-
-
-# ─────────────────────────────────────────────
-# Leader 决策接口
-# ─────────────────────────────────────────────
-DOMAIN_KEYWORDS = [
-    ("Socioeconomic", ["槟榔", "橡胶", "椰子", "芒果", "香蕉", "水稻",
-                       "价格", "收入", "撂荒", "外出务工", "化肥", "农药",
-                       "财政", "预算", "经济"]),
-    ("Policy",        ["红线", "规划", "法规", "补贴", "耕地保护",
-                       "永久基本农田", "国土空间", "三调", "改革", "发展"]),
-    ("Natural",       ["台风", "气候", "森林", "降水", "生态",
-                       "热带雨林", "灾害", "植被", "碳汇"]),
-    ("Urbanization",  ["城镇化", "建设用地", "自贸港", "封关",
-                       "新增建设", "开发区", "园区", "资规"]),
-]
-
-def _fallback_dispatch(task: str) -> List[str]:
-    hits = [m for m, kws in DOMAIN_KEYWORDS if any(kw in task for kw in kws)]
-    return hits or ["Policy", "Socioeconomic"]
-
-async def leader_initial_dispatch(task: str, ctx: SessionCtx) -> List[str]:
-    prompt = LEADER_DISPATCH_INITIAL.format(task=task)
-    reply  = await claude_code_call("Leader", prompt, ctx, timeout=120, use_session=False)
-    data   = extract_json(reply) or {}
-    need   = [n for n in data.get("need", []) if n in NAME_TO_KEY and n != "Leader"]
-    log.info(f"  leader dispatch: {need}")
-    return need or _fallback_dispatch(task)
-
-async def leader_evaluate(task: str, round_num: int, transcript: str, ctx: SessionCtx) -> dict:
-    prompt = LEADER_EVALUATE.format(
-        task=task, round_num=round_num,
-        max_rounds=MAX_GROUPCHAT_ROUNDS, transcript=transcript,
-    )
-    reply = await claude_code_call("Leader", prompt, ctx, timeout=120, use_session=False)
-    data  = extract_json(reply)
-    if not data:
-        return {"action": "summarize"}
-    if data.get("action") == "continue":
-        ask = [
-            a for a in data.get("ask", [])
-            if isinstance(a, dict) and a.get("who") in NAME_TO_KEY
-            and a.get("who") != "Leader" and a.get("question")
-        ]
-        return {"action": "continue", "ask": ask} if ask else {"action": "summarize"}
-    return {"action": "summarize"}
-
-async def leader_summarize(task: str, round_count: int, transcript: str, ctx: SessionCtx) -> str:
-    prompt = LEADER_SUMMARIZE.format(
-        task=task, round_count=round_count, transcript=transcript,
-    )
-    return await claude_code_call("Leader", prompt, ctx, timeout=300, use_session=False)
-
-
-# ─────────────────────────────────────────────
-# 意图分类
-# ─────────────────────────────────────────────
-MEMBER_NAME_PATTERNS = [
-    ("Policy",        re.compile(r"改革发展研究员|政策研究员|政策员|政策研究|\bpolicy\b", re.I)),
-    ("Socioeconomic", re.compile(r"社会经济研究员|财政经济研究员|经济研究员|经济员|\bsocioeconomic\b", re.I)),
-    ("Natural",       re.compile(r"生态环境研究员|自然环境研究员|环境研究员|生态研究员|\bnatural\b", re.I)),
-    ("Urbanization",  re.compile(r"城镇资规研究员|城镇化研究员|城镇研究员|资规研究员|\burbanization\b", re.I)),
-    ("Leader",        re.compile(r"leader|生态总督|总督|首席", re.I)),
-]
-
-TEAMLEAD_KW_RE = re.compile(r"team.?lead|协调人|总协调|teamlead", re.I)
-
-RESEARCH_KEYWORDS    = ["预测", "建模", "综合分析", "多领域", "全面分析", "整体评估",
-                        "讨论", "互相", "一起分析", "共同研究", "协作", "群聊", "集体"]
-INTRO_KEYWORDS       = ["有谁", "介绍团队", "团队成员", "什么团队", "团队有哪些", "团队简介"]
-CONTINUATION_SIGNALS = ["继续", "详细", "展开", "再说", "更多", "输出",
-                        "把信息", "给我", "完整", "具体", "再问"]
-BATCH_INTRO_RE = re.compile(
-    r"(每个|每位|所有|全部|各个|各位).{0,10}(研究员|成员|专家).{0,10}(介绍|发|说|讲|自我介绍)(?!.*讨论)"
-    r"|(介绍|发|说|讲).{0,10}(每个|每位|所有|全部|各个|各位).{0,10}(研究员|成员|专家)(?!.*讨论)",
-    re.IGNORECASE,
-)
-
-
-def rule_based_intent(user_msg: str, ctx: SessionCtx) -> Optional[dict]:
-    msg = (user_msg or "").strip()
-    if not msg:
-        return {"intent": "chat"}
-    if TEAMLEAD_KW_RE.search(msg):
-        return {"intent": "chat"}
-    if any(kw in msg for kw in RESEARCH_KEYWORDS):
-        return {"intent": "research"}
-    if BATCH_INTRO_RE.search(msg):
-        return {"intent": "batch_intro"}
-    matched = [m for m, pat in MEMBER_NAME_PATTERNS if pat.search(msg)]
-    if len(matched) == 1:
-        return {"intent": "single", "member": matched[0]}
-    if len(matched) > 1:
-        return {"intent": "research"}
-    if any(kw in msg for kw in INTRO_KEYWORDS):
-        return {"intent": "intro"}
-    last_agent = None
-    for speaker, _ in reversed(ctx.history):
-        if speaker in AGENT_META and speaker not in ("TeamLead", "user", "Leader"):
-            last_agent = speaker
-            break
-    if last_agent and len(msg) < 20:
-        if any(s in msg for s in CONTINUATION_SIGNALS):
-            return {"intent": "single", "member": last_agent}
-    domain_hits = [m for m, kws in DOMAIN_KEYWORDS if any(kw in msg for kw in kws)]
-    if len(domain_hits) == 1:
-        return {"intent": "single", "member": domain_hits[0]}
-    if len(domain_hits) > 1:
-        return {"intent": "research"}
-    return None
-
-
-async def classify_intent(user_msg: str, ctx: SessionCtx) -> dict:
-    result = rule_based_intent(user_msg, ctx)
-    if result is not None:
-        log.info(f"  intent (rule): {result}")
-        return result
-    try:
-        r = await get_llm().create([
-            SystemMessage(content=(
-                "判断用户消息意图，输出严格JSON一行，不要解释。\n"
-                "类别：chat / intro / single / research\n"
-                "single 必须给 member: Policy/Socioeconomic/Natural/Urbanization/Leader\n"
-                "只输出 JSON。"
-            )),
-            UserMessage(content=user_msg, source="user"),
-        ])
-        text   = (r.content if isinstance(r.content, str) else str(r.content))
-        parsed = extract_json(text)
-        if parsed:
-            log.info(f"  intent (llm): {parsed}")
-            return parsed
-    except Exception as e:
-        log.warning(f"intent llm failed: {e}")
-    return {"intent": "chat"}
-
-
-# ─────────────────────────────────────────────
-# SSE helpers
-# ─────────────────────────────────────────────
-async def sse(event: dict) -> str:
-    return "data: " + json.dumps(event, ensure_ascii=False) + "\n\n"
-
-def label_for(name: str) -> str:
-    return AGENT_META.get(name, {}).get("label", name)
-
-
-# ─────────────────────────────────────────────
-# 群聊 transcript 构造
-# ─────────────────────────────────────────────
-def build_transcript(rounds: List[List[Tuple[str, str]]]) -> str:
-    parts = []
-    for i, round_msgs in enumerate(rounds, 1):
-        parts.append(f"\n========== 第 {i} 轮 ==========")
-        for member, content in round_msgs:
-            parts.append(f"\n【{label_for(member)}】\n{content}")
-    return "\n".join(parts)
-
-def build_member_prompt(task: str, member: str,
-                        rounds: List[List[Tuple[str, str]]],
-                        leader_question: Optional[str] = None) -> str:
-    if not rounds:
-        context     = "（你是第一批发言者，独立给出你专业领域的分析）"
-        instruction = "用你的专业能力(WebSearch + 本地知识库)，针对任务给出专业分析，300字内，按 CLAUDE.md 模板输出。"
-    else:
-        transcript  = build_transcript(rounds)
-        context     = f"团队已发言记录:\n{transcript}"
-        if leader_question:
-            instruction = (
-                f"【Leader 针对你的追问】{leader_question}\n\n"
-                f"专门针对这个追问给出补充/澄清/修正，250字内。"
-                f"如果别人的观点有问题，可以质疑并给出依据。"
-            )
-        else:
-            instruction = "看完别人的发言，补充你的角度，或质疑/修正不准确的地方，250字内。"
-    return f"【团队任务】{task}\n\n{context}\n\n---\n现在轮到你({member}):\n{instruction}"
-
-def _build_full_task(msg: str, ctx: SessionCtx) -> str:
-    if len(msg.strip()) >= 15:
-        return msg.strip()
-    parts = []
-    for speaker, content in ctx.history[-6:-1]:
-        if speaker == "user":
-            parts.append(f"用户之前说: {content}")
-        elif speaker == "TeamLead":
-            parts.append(f"TeamLead 之前问: {content}")
-    if not parts:
-        return msg.strip()
-    return "\n".join(parts) + f"\n用户现在补充: {msg.strip()}"
-
-
-# ─────────────────────────────────────────────
-# Path handlers
-# ─────────────────────────────────────────────
-async def path_chat(msg, ctx):
-    ctx.history.append(("user", msg))
-    reply = await teamlead_call(msg, ctx)
-    ctx.history.append(("TeamLead", reply))
-    yield await sse({"speaker": "TeamLead", "label": label_for("TeamLead"), "content": reply})
-
-
-async def path_intro(msg, ctx):
-    ctx.history.append(("user", msg))
-    reply = await teamlead_call(
-        "用户想了解团队。请用 markdown 表格介绍 6 个成员："
-        "TeamLead、Leader、改革发展研究员、社会经济研究员、生态环境研究员、城镇资规研究员。"
-        "包含职责，150字内。", ctx,
-    )
-    ctx.history.append(("TeamLead", reply))
-    yield await sse({"speaker": "TeamLead", "label": label_for("TeamLead"), "content": reply})
-
-
-async def path_batch_intro(msg, ctx):
-    ctx.history.append(("user", msg))
-    tl = await teamlead_call(
-        "用户希望4位研究员各自自我介绍。请只说一句话（15字内）：'好的，请各位研究员依次介绍。'不要自己扮演研究员。", ctx,
-    )
-    if ctx.cancel.is_set():
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "已中断。"})
-        return
-    ctx.history.append(("TeamLead", tl))
-    yield await sse({"speaker": "TeamLead", "label": label_for("TeamLead"), "content": tl})
-
-    for member in ["Policy", "Socioeconomic", "Natural", "Urbanization"]:
-        if ctx.cancel.is_set():
-            yield await sse({"speaker": "System", "label": "🛑 系统", "content": "已中断。"})
-            return
-        key = NAME_TO_KEY.get(member)
-        if key and not agents[key].is_alive():
-            yield await sse({"speaker": "System", "label": "⚙️ 系统",
-                             "content": f"正在启动 {label_for(member)} ..."})
-        prompt = (
-            "请简短自我介绍，纯文本输出，不要用**粗体**、- 列表、## 标题等 markdown 格式。包含:\n"
-            "1. 你的专业方向(1句)\n"
-            "2. 1-2条你近期关注的具体数据或政策(带年份和数字)\n"
-            "3. 询问用户想深入了解哪个方向\n\n"
-            "控制在150字内，直接输出正文。"
-        )
-        reply = await claude_code_call(member, prompt, ctx, timeout=120)
-        if ctx.cancel.is_set():
-            yield await sse({"speaker": "System", "label": "🛑 系统", "content": "已中断。"})
-            return
-        if is_failure_reply(reply):
-            yield await sse({"speaker": "System", "label": "⚠️ 系统",
-                             "content": f"{label_for(member)} 调用失败，已跳过。"})
-            continue
-        ctx.history.append((member, reply))
-        yield await sse({"speaker": member, "label": label_for(member), "content": reply})
-
-
-async def path_single(msg, member, ctx):
-    ctx.history.append(("user", msg))
-    if ctx.cancel.is_set():
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "已中断。"})
-        return
-    key = NAME_TO_KEY.get(member)
-    if key and not agents[key].is_alive():
-        yield await sse({"speaker": "System", "label": "⚙️ 系统",
-                         "content": f"正在启动 {label_for(member)} ..."})
-    reply = await claude_code_call(member,
-        f"【用户消息】{msg}\n\n以你的专业身份直接回答，纯文本输出，不要用**粗体**、- 列表、## 标题等 markdown 格式。\n"
-        f"泛泛问题（如'说句话''介绍一下'）主动介绍专业领域+近期关注点+反问方向，150字内。", ctx)
-    if ctx.cancel.is_set():
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "已中断。"})
-        return
-    if is_failure_reply(reply):
-        yield await sse({"speaker": "System", "label": "⚠️ 系统",
-                         "content": f"{label_for(member)} 调用失败: {reply[:80]}"})
-        return
-    ctx.history.append((member, reply))
-    yield await sse({"speaker": member, "label": label_for(member), "content": reply})
-
-
-async def path_research(msg, ctx):
-    ctx.history.append(("user", msg))
-    full_task = _build_full_task(msg, ctx)
-    log.info(f"  research full_task: {full_task[:80]}")
-
-    def cancelled():
-        return ctx.cancel.is_set()
-
-    tl = await teamlead_call(
-        f"用户提了综合研究任务: {full_task}\n请一句话(30字内)说要请 Leader 调度团队展开多轮群聊。", ctx,
-    )
-    ctx.history.append(("TeamLead", tl))
-    yield await sse({"speaker": "TeamLead", "label": label_for("TeamLead"), "content": tl})
-    if cancelled():
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-        return
-
-    yield await sse({"speaker": "System", "label": "⚙️ 系统", "content": "Leader 正在分析任务，决定初始派遣..."})
-    initial = await leader_initial_dispatch(full_task, ctx)
-    if cancelled():
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-        return
-    if not initial:
-        reply = await claude_code_call("Leader",
-            f"用户任务: {full_task}\n你判断不需要研究员协助。请直接给一个简短回答(200字内)。",
-            ctx, use_session=False)
-        if cancelled(): return
-        if not is_failure_reply(reply):
-            ctx.history.append(("Leader", reply))
-            yield await sse({"speaker": "Leader", "label": label_for("Leader"), "content": reply})
-        return
-
-    yield await sse({"speaker": "System", "label": "⚙️ 系统",
-                     "content": f"Leader 派遣: {', '.join(label_for(n) for n in initial)}"})
-    if cancelled():
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-        return
-
-    rounds: List[List[Tuple[str, str]]] = []
-    pending: List[Tuple[str, Optional[str]]] = [(m, None) for m in initial]
-
-    for round_idx in range(1, MAX_GROUPCHAT_ROUNDS + 1):
-        if cancelled():
-            yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-            return
-        if not pending:
-            break
-
-        yield await sse({"speaker": "System", "label": "⚙️ 系统",
-                         "content": f"—— 第 {round_idx} 轮讨论 ——"})
-
-        current_round: List[Tuple[str, str]] = []
-        for member, leader_q in pending:
-            if cancelled():
-                yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-                return
-            key = NAME_TO_KEY.get(member)
-            if key and not agents[key].is_alive():
-                yield await sse({"speaker": "System", "label": "⚙️ 系统",
-                                 "content": f"启动 {label_for(member)} ..."})
-            reply = await claude_code_call(
-                member, build_member_prompt(full_task, member, rounds, leader_q), ctx,
-            )
-            if cancelled():
-                yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-                return
-            if is_failure_reply(reply):
-                yield await sse({"speaker": "System", "label": "⚠️ 系统",
-                                 "content": f"{label_for(member)} 调用失败，已跳过。"})
-                continue
-            current_round.append((member, reply))
-            ctx.history.append((member, reply))
-            yield await sse({"speaker": member, "label": label_for(member), "content": reply})
-
-        if not current_round:
-            msg_txt = "任务已中断。" if cancelled() else "本轮所有研究员均调用失败，中止群聊。"
-            yield await sse({"speaker": "System", "label": "🛑 系统", "content": msg_txt})
-            return
-
-        rounds.append(current_round)
-
-        if cancelled():
-            yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-            return
-
-        if round_idx >= MAX_GROUPCHAT_ROUNDS:
-            yield await sse({"speaker": "System", "label": "⚙️ 系统",
-                             "content": f"已到最大轮次({MAX_GROUPCHAT_ROUNDS})，Leader 强制汇总。"})
-            break
-
-        yield await sse({"speaker": "System", "label": "⚙️ 系统", "content": "Leader 评估本轮发言..."})
-        decision = await leader_evaluate(full_task, round_idx, build_transcript(rounds), ctx)
-        if cancelled():
-            yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-            return
-
-        if decision["action"] == "summarize":
-            yield await sse({"speaker": "System", "label": "⚙️ 系统", "content": "Leader 决定：讨论充分，进入汇总。"})
-            break
-        ask_list = decision["ask"]
-        pending  = [(a["who"], a["question"]) for a in ask_list]
-        yield await sse({"speaker": "System", "label": "⚙️ 系统",
-                         "content": "Leader 决定追问 → " + "; ".join(
-                             f"{label_for(a['who'])}: {a['question'][:40]}" for a in ask_list)})
-
-    if cancelled():
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "任务已中断。"})
-        return
-    if not rounds:
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": "没有有效轮次，无法汇总。"})
-        return
-
-    yield await sse({"speaker": "System", "label": "⚙️ 系统", "content": "Leader 综合所有轮次，生成最终结论..."})
-    final = await leader_summarize(full_task, len(rounds), build_transcript(rounds), ctx)
-    if is_failure_reply(final):
-        yield await sse({"speaker": "System", "label": "🛑 系统", "content": f"Leader 汇总失败: {final[:80]}"})
-        return
-    ctx.history.append(("Leader", final))
-    yield await sse({"speaker": "Leader", "label": label_for("Leader"), "content": final})
-
-
-# ─────────────────────────────────────────────
-# FastAPI app
-# ─────────────────────────────────────────────
-_bg_task: Optional[asyncio.Task] = None
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global _bg_task
-    log.info("=" * 60)
-    log.info("  HAINAN ECO TEAM — 按需启动版")
-    log.info("=" * 60)
-    for cfg in SUBAGENT_CONFIG.values():
-        _kill_port(cfg["port"])
-    _kill_port(8000)
-    for key in SUBAGENT_CONFIG:
-        agents[key] = AgentProcess(key)
-    for key, agent in agents.items():
-        if agent.bootstrap:
-            log.info(f"启动常驻 agent: {agent.name}")
-            ok = await agent.spawn()
-            if not ok:
-                log.error(f"  X {agent.name} 启动失败")
-    log.info("研究员将在被调用时按需启动，空闲10分钟自动关闭。")
-    _bg_task = asyncio.create_task(supervisor_loop())
-    log.info("Main API ready on port 9000.")
-    yield
-    log.info("Shutting down...")
-    if _bg_task:
-        _bg_task.cancel()
-        try:
-            await _bg_task
-        except Exception:
-            pass
-    for agent in agents.values():
-        agent.shutdown()
-    log.info("All stopped.")
-
-
-app = FastAPI(title="Hainan Eco Team", lifespan=lifespan)
-
-
-class NgrokCORSMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: StarletteRequest, call_next):
-        if request.method == "OPTIONS":
-            return StarletteResponse(
-                status_code=200,
-                headers={
-                    "Access-Control-Allow-Origin":  "*",
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                    "Access-Control-Allow-Headers": "*",
-                    "ngrok-skip-browser-warning":   "true",
-                },
-            )
-        response = await call_next(request)
-        response.headers["Access-Control-Allow-Origin"]  = "*"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["ngrok-skip-browser-warning"]   = "true"
-        return response
-
-app.add_middleware(NgrokCORSMiddleware)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
-frontend_dir = PROJECT_ROOT / "frontend"
-if frontend_dir.exists():
-    app.mount("/frontend", StaticFiles(directory=str(frontend_dir)), name="frontend")
-
-
-class ChatRequest(BaseModel):
-    message: str
-    session_id: str = ""
-
-
-@app.post("/chat/stream")
-async def chat_stream(req: ChatRequest):
-    if not req.message.strip():
-        async def _empty():
-            yield await sse({"error": "empty"})
-            yield "data: [DONE]\n\n"
-        return StreamingResponse(_empty(), media_type="text/event-stream")
-
-    sid = req.session_id or str(uuid.uuid4())
-    if sid not in sessions:
-        sessions[sid] = SessionCtx()
-    ctx = sessions[sid]
-
-    async def stream():
-        yield await sse({"session_id": sid})
-        if ctx.lock.locked():
-            yield await sse({
-                "speaker": "System", "label": "⚠️ 系统",
-                "content": '当前还有任务正在处理。请等待完成或点击"停止任务"按钮。',
-            })
-            yield "data: [DONE]\n\n"
-            return
-        ctx.cancel.clear()
-        try:
-            async with ctx.lock:
-                log.info(f"[{sid[:8]}] {req.message[:60]}")
-                intent = await classify_intent(req.message, ctx)
-                kind   = intent.get("intent", "chat")
-                log.info(f"[{sid[:8]}] kind={kind} member={intent.get('member', '-')}")
-                if kind == "intro":
-                    gen = path_intro(req.message, ctx)
-                elif kind == "batch_intro":
-                    gen = path_batch_intro(req.message, ctx)
-                elif kind == "single":
-                    gen = path_single(req.message, intent.get("member", "Policy"), ctx)
-                elif kind == "research":
-                    gen = path_research(req.message, ctx)
-                else:
-                    gen = path_chat(req.message, ctx)
-                async for ev in gen:
-                    yield ev
-                yield "data: [DONE]\n\n"
-        except Exception as e:
-            log.exception("stream error")
-            yield await sse({"error": str(e)})
-            yield "data: [DONE]\n\n"
-
-    return StreamingResponse(stream(), media_type="text/event-stream")
-
-
-@app.post("/reset")
-async def reset(req: ChatRequest):
-    sessions.pop(req.session_id, None)
-    return {"ok": True}
-
-
-@app.post("/stop")
-async def stop(req: ChatRequest):
-    ctx = sessions.get(req.session_id)
-    if not ctx:
-        return {"ok": True, "stopped": False}
-    ctx.cancel.set()
-    killed: List[str] = []
-    leader_was_killed = False
-    for key, agent in agents.items():
-        if agent.busy and agent.is_alive():
-            log.warning(f"  /stop: force-killing {agent.name}")
-            agent.shutdown()
-            killed.append(agent.name)
-            if key == "leader":
-                leader_was_killed = True
-    if leader_was_killed:
-        log.info("  /stop: respawning leader")
-        ok = await agents["leader"].spawn()
-        if not ok:
-            log.error("  /stop: leader respawn failed")
-    ctx.claude_sessions.clear()
-    return {"ok": True, "stopped": True, "killed": killed, "leader_restarted": leader_was_killed}
-
-
-@app.post("/shutdown")
-async def shutdown():
-    log.warning("Shutdown via /shutdown")
-    sessions.clear()
-    for agent in agents.values():
-        agent.shutdown()
-    async def _exit():
-        await asyncio.sleep(0.5)
-        os._exit(0)
-    asyncio.create_task(_exit())
-    return {"ok": True}
-
-
-@app.get("/status")
-async def status():
-    out: Dict[str, Dict] = {
-        "team-lead": {"online": True, "busy": busy_team_lead},
+        if (obj.error) {
+          const oldRow = document.querySelector('[data-thinking="1"]');
+          if (oldRow) oldRow.remove();
+          addAgentMsg('System', '出错：' + obj.error, { cls: 'error' });
+          continue;
+        }
+        if (obj.speaker && obj.content) {
+          if (!firstAgentArrived) {
+            firstAgentArrived = true;
+            const oldRow = document.querySelector('[data-thinking="1"]');
+            if (oldRow) oldRow.remove();
+          }
+          addAgentMsg(obj.speaker, obj.content);
+        }
+      }
     }
-    for key, agent in agents.items():
-        out[key] = agent.status_for_ui()
-    return out
+    const stillThinking = document.querySelector('[data-thinking="1"]');
+    if (stillThinking) {
+      stillThinking.remove();
+      addAgentMsg('System', '未收到团队回复，请重试', { cls: 'error' });
+    }
+  } catch (e) {
+    const oldRow = document.querySelector('[data-thinking="1"]');
+    if (oldRow) oldRow.remove();
+    addAgentMsg('System', '连接失败：' + e.message + '\n请确认后端已启动（端口 9000）。', { cls: 'error' });
+  }
+  busy = false;
+  sbtn.disabled = false;
+  if (stopBtn) stopBtn.disabled = true;
+  inp.focus();
+}
 
+async function stopTask() {
+  if (!sid || !busy) return;
+  if (!confirm('确定要中断当前讨论吗？\n\n• 会向后端发送停止信号\n• 正在进行的这一步完成后会立即停下\n• 对话历史保留，可以接着发新消息')) {
+    return;
+  }
+  const stopBtn = document.getElementById('stopBtn');
+  stopBtn.disabled = true;
+  stopBtn.textContent = '停止中...';
+  try {
+    const r = await fetch(`${API}/stop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: JSON.stringify({ message: 'stop', session_id: sid }),
+    });
+    const data = await r.json();
+    if (data.stopped) {
+      addAgentMsg('System', '已发送中断信号。当前步骤结束后讨论会停止，对话历史保留，可继续提问。', { cls: 'system' });
+    } else {
+      addAgentMsg('System', '当前没有正在进行的任务。', { cls: 'system' });
+    }
+  } catch (e) {
+    addAgentMsg('System', '停止请求失败：' + e.message, { cls: 'error' });
+  }
+  const stillThinking = document.querySelector('[data-thinking="1"]');
+  if (stillThinking) stillThinking.remove();
+  busy = false;
+  document.getElementById('sbtn').disabled = false;
+  setTimeout(() => {
+    stopBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>停止任务`;
+  }, 500);
+}
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+async function shutdownAll() {
+  if (!confirm('确定要关闭整个后端服务吗？\n\n• 所有本地 Agent 都会停止\n• 当前对话会丢失\n• 必须重新运行启动器才能再用')) {
+    return;
+  }
+  try {
+    addAgentMsg('System', '正在关闭后端服务...', { cls: 'system' });
+    await fetch(`${API}/shutdown`, {
+      method: 'POST',
+      headers: { 'ngrok-skip-browser-warning': 'true' },
+    });
+  } catch (e) {}
+  setTimeout(() => {
+    addAgentMsg('System', '后端服务已关闭。如需重新使用，请在终端重新运行启动器 python main.py。', { cls: 'error' });
+    document.getElementById('sbtn').disabled = true;
+    document.getElementById('stopBtn').disabled = true;
+    STATUS_KEYS.forEach(k => {
+      const el = document.getElementById('dot-' + k);
+      if (el) el.className = 'dot off';
+    });
+  }, 1500);
+}
 
+async function newChat() {
+  if (sid) {
+    try {
+      await fetch(`${API}/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify({ message: 'reset', session_id: sid }),
+      });
+    } catch (e) {}
+  }
+  sid = '';
+  const badge = document.getElementById('sess-badge');
+  badge.textContent = '无会话';
+  badge.title = '';
+  badge.className = 'session-badge';
+  document.getElementById('chat-inner').innerHTML = `
+    <div class="empty-state" id="empty-state">
+      <h2>欢迎使用海南生态预测团队</h2>
+      <p>团队成员已就位。提出研究任务后，Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
+        <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势</button>
+        <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
+        <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
+      </div>
+    </div>
+  `;
+}
 
-# ─────────────────────────────────────────────
-# Run
-# ─────────────────────────────────────────────
-if __name__ == "__main__":
-    import uvicorn
-    print("=" * 60)
-    print("  HAINAN ECO TEAM — 按需启动版")
-    print("=" * 60)
-    print(f"api.py at      : {PROJECT_ROOT}")
-    print(f"Sub-agent base : {SUBAGENT_BASE}")
-    uvicorn.run("api:app", host="0.0.0.0", port=9000, reload=False, access_log=False)
+async function pollStatus() {
+  try {
+    const r = await fetch(`${API}/status`, {
+      headers: { 'ngrok-skip-browser-warning': 'true' }
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    STATUS_KEYS.forEach(k => {
+      const el = document.getElementById('dot-' + k);
+      if (!el) return;
+      const a = data[k];
+      el.className = 'dot ' + (!a || !a.online ? 'off' : (a.busy ? 'busy' : 'on'));
+    });
+  } catch (e) {
+    // 静默失败，不影响主功能
+  }
+}
+
+document.getElementById('inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+document.getElementById('inp').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+});
+
+setInterval(pollStatus, 2500);
+pollStatus();
+</script>
+</body>
+</html>
