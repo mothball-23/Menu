@@ -6,32 +6,32 @@
 <title>海南生态预测团队 · Team Console</title>
 <style>
 :root {
-  --bg-page: #0e1410;
-  --bg-sidebar: #131b16;
-  --bg-main: #1a221d;
-  --bg-card: #232b26;
-  --bg-card-hover: #2a332e;
-  --bg-input: #161e19;
-  --border: rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.14);
-  --text-primary: #e8ebe9;
-  --text-secondary: #a0a8a3;
-  --text-tertiary: #6c736e;
-  --accent: #5dcaa5;
-  --accent-dim: #1d9e75;
-  --user-bubble: #1f3a2e;
-  --user-text: #9fe1cb;
-  --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.35);
+  --bg-page: #fff0f5;
+  --bg-sidebar: #ffe4f0;
+  --bg-main: #fff8fb;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fff0f7;
+  --bg-input: #fff5f9;
+  --border: rgba(255,105,180,0.15);
+  --border-strong: rgba(255,105,180,0.35);
+  --text-primary: #3d1a2e;
+  --text-secondary: #8a4a6a;
+  --text-tertiary: #c490b0;
+  --accent: #ff69b4;
+  --accent-dim: #e0559a;
+  --user-bubble: #ffe0f0;
+  --user-text: #c0306a;
+  --shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 8px 24px rgba(255,105,180,0.15);
   --radius: 10px;
   --radius-lg: 14px;
 
-  --c-tl: #8b80f0;     --c-tl-bg: rgba(139,128,240,0.12);
-  --c-ld: #5dcaa5;     --c-ld-bg: rgba(93,202,165,0.12);
-  --c-po: #6ba8e8;     --c-po-bg: rgba(107,168,232,0.12);
-  --c-so: #e8a653;     --c-so-bg: rgba(232,166,83,0.12);
-  --c-na: #82c46c;     --c-na-bg: rgba(130,196,108,0.12);
-  --c-ur: #e87aa8;     --c-ur-bg: rgba(232,122,168,0.12);
-  --c-sys: #888e8a;    --c-sys-bg: rgba(136,142,138,0.10);
+  --c-tl: #b06ce0;     --c-tl-bg: rgba(176,108,224,0.12);
+  --c-ld: #ff69b4;     --c-ld-bg: rgba(255,105,180,0.12);
+  --c-po: #5b9ef0;     --c-po-bg: rgba(91,158,240,0.12);
+  --c-so: #ff8c42;     --c-so-bg: rgba(255,140,66,0.12);
+  --c-na: #52c97a;     --c-na-bg: rgba(82,201,122,0.12);
+  --c-ur: #e055a0;     --c-ur-bg: rgba(224,85,160,0.12);
+  --c-sys: #b090a8;    --c-sys-bg: rgba(176,144,168,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -72,10 +72,10 @@ body {
 .brand-logo {
   width: 32px; height: 32px;
   border-radius: 9px;
-  background: linear-gradient(135deg, #5dcaa5, #1d9e75);
+  background: linear-gradient(135deg, #ffb3d9, #ff69b4);
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
-  color: #042c2a;
+  color: #7a0040;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
@@ -161,9 +161,9 @@ body {
   background: #555;
   transition: all 0.25s;
 }
-.dot.on   { background: #5dcaa5; box-shadow: 0 0 0 4px rgba(93,202,165,0.15); }
-.dot.busy { background: #e8a653; box-shadow: 0 0 0 4px rgba(232,166,83,0.18); animation: pulse 1.4s ease-in-out infinite; }
-.dot.off  { background: #4a504c; }
+.dot.on   { background: #ff69b4; box-shadow: 0 0 0 4px rgba(255,105,180,0.2); }
+.dot.busy { background: #ff8c42; box-shadow: 0 0 0 4px rgba(255,140,66,0.2); animation: pulse 1.4s ease-in-out infinite; }
+.dot.off  { background: #e0b0cc; }
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.55; transform: scale(0.85); }
@@ -216,9 +216,9 @@ body {
   font-family: ui-monospace, 'SF Mono', Consolas, monospace;
 }
 .session-badge.active {
-  background: rgba(93,202,165,0.1);
+  background: rgba(255,105,180,0.1);
   color: var(--accent);
-  border-color: rgba(93,202,165,0.25);
+  border-color: rgba(255,105,180,0.3);
 }
 .btn {
   height: 32px;
@@ -235,14 +235,14 @@ body {
 .btn:hover { background: var(--bg-card-hover); border-color: var(--border-strong); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-danger {
-  background: rgba(232,75,75,0.08);
-  border-color: rgba(232,75,75,0.25);
-  color: #f0a0a0;
+  background: rgba(232,75,75,0.06);
+  border-color: rgba(232,75,75,0.2);
+  color: #c04040;
 }
 .btn-danger:hover {
-  background: rgba(232,75,75,0.16);
-  border-color: rgba(232,75,75,0.45);
-  color: #ffb3b3;
+  background: rgba(232,75,75,0.12);
+  border-color: rgba(232,75,75,0.35);
+  color: #a03030;
 }
 
 .chat-scroll {
@@ -364,7 +364,7 @@ body {
 .msg-row.user .msg-bubble {
   background: var(--user-bubble);
   color: var(--user-text);
-  border-color: rgba(93,202,165,0.2);
+  border-color: rgba(255,105,180,0.3);
   border-top-right-radius: 4px;
 }
 .msg-row.bot .msg-bubble {
@@ -377,9 +377,9 @@ body {
   border-style: dashed;
 }
 .msg-bubble.error {
-  background: rgba(232,75,75,0.08);
-  border-color: rgba(232,75,75,0.25);
-  color: #f0a0a0;
+  background: rgba(232,75,75,0.06);
+  border-color: rgba(232,75,75,0.2);
+  color: #c04040;
 }
 .msg-bubble.system {
   background: var(--c-sys-bg);
@@ -453,7 +453,7 @@ textarea.busy-warn::placeholder {
   border-radius: 8px;
   background: var(--accent-dim);
   border: 0;
-  color: #02201a;
+  color: #7a0040;
   cursor: pointer;
   display: flex;
   align-items: center;
