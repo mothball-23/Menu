@@ -597,9 +597,8 @@ textarea.busy-warn::placeholder {
 
 <script>
 // API 地址自适应：通过 http(s) 访问时用当前源；直接打开文件时退回 localhost:9000
-const API = (location.protocol === 'http:' || location.protocol === 'https:')
-  ? location.origin
-  : 'http://localhost:9000';
+const params = new URLSearchParams(location.search);
+const API = params.get('api') || 'http://localhost:9000';
 
 let sid = '';
 let busy = false;
