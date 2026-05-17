@@ -389,6 +389,48 @@ body {
   font-style: italic;
 }
 
+/* ── 来源列表 ── */
+.msg-sources {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(255,105,180,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-tertiary);
+}
+.msg-sources-title {
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+.msg-sources ol {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.msg-sources li {
+  color: var(--text-secondary);
+}
+.msg-sources .src-org {
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+}
+.msg-sources a {
+  color: var(--accent-dim);
+  text-decoration: none;
+  word-break: break-all;
+}
+.msg-sources a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .typing-dot {
   display: inline-block;
   width: 6px; height: 6px;
@@ -596,13 +638,11 @@ textarea.busy-warn::placeholder {
 </div>
 
 <script>
-// API 地址自适应：通过 http(s) 访问时用当前源；直接打开文件时退回 localhost:9000
 const API = 'https://shabby-onyx-fracture.ngrok-free.dev';
 
 let sid = '';
 let busy = false;
 
-// key 与后端推送的 speaker 字段完全对齐（研究员为小写）
 const SPEAKER_INFO = {
   TeamLead:      { tag: 'TL',  cls: 'tl',  avCls: 'av-tl',  label: '🧭 Team-lead' },
   Leader:        { tag: 'LD',  cls: 'ld',  avCls: 'av-ld',  label: '📊 Leader（生态总督）' },
@@ -613,7 +653,6 @@ const SPEAKER_INFO = {
   System:        { tag: '⚙',  cls: 'sys', avCls: 'av-sys', label: '系统', isSystem: true },
 };
 
-// 状态轮询对应的 key（与 /status 返回的 key 一致）
 const STATUS_KEYS = ['team-leader', 'leader', 'policy', 'socioeconomic', 'natural', 'urbanization'];
 
 function fmtTime() {
@@ -642,30 +681,85 @@ function addUserMsg(text) {
   scrollToEnd();
 }
 
+/**
+ * 渲染来源列表为 HTML 字符串。
+ * sources: [{id, title, org, url}]
+ * - url 有值且以 http 开头 → 渲染为可点击链接
+ * - url 为空 → 只显示机构·标题文字
+ */
+function buildSourcesHTML(sources) {
+  if (!sources || sources.length === 0) return '';
+  const items = sources.map(s => {
+    const label = [s.org, s.title].filter(Boolean).join(' · ');
+    const hasUrl = s.url && s.url.startsWith('http');
+    const linkPart = hasUrl
+      ? `<a href="${escapeHtml(s.url)}" target="_blank" rel="noopener">${escapeHtml(s.url)}</a>`
+      : '';
+    return `<li>
+      <span class="src-org">[${s.id}]</span>
+      ${escapeHtml(label)}
+      ${linkPart ? '<br>' + linkPart : ''}
+    </li>`;
+  }).join('');
+  return `<div class="msg-sources">
+    <div class="msg-sources-title">参考来源</div>
+    <ol>${items}</ol>
+  </div>`;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * 渲染一条 Agent 消息。
+ * opts.sources: 来源数组，有内容时追加在气泡下方。
+ */
 function addAgentMsg(speaker, content, opts = {}) {
   clearEmptyState();
-  const info = SPEAKER_INFO[speaker] || { tag: speaker.slice(0,2).toUpperCase(), cls: 'sys', avCls: 'av-sys', label: speaker };
+  const info = SPEAKER_INFO[speaker] || {
+    tag: speaker.slice(0, 2).toUpperCase(), cls: 'sys', avCls: 'av-sys', label: speaker
+  };
   const inner = document.getElementById('chat-inner');
   const row = document.createElement('div');
   row.className = 'msg-row bot';
+
   const bubbleCls = opts.cls || (info.isSystem ? 'system' : '');
+  const sourcesHTML = buildSourcesHTML(opts.sources);
+
   row.innerHTML = `
     <div class="msg-avatar ${info.avCls}">${info.tag}</div>
     <div class="msg-body">
-      <div class="msg-meta"><span class="msg-speaker ${info.cls}">${info.label}</span><span>${fmtTime()}</span></div>
+      <div class="msg-meta">
+        <span class="msg-speaker ${info.cls}">${info.label}</span>
+        <span>${fmtTime()}</span>
+      </div>
       <div class="msg-bubble ${bubbleCls}"></div>
+      ${sourcesHTML}
     </div>
   `;
+
   const bubble = row.querySelector('.msg-bubble');
-  if (opts.html) bubble.innerHTML = content;
-  else bubble.textContent = content;
+  if (opts.html) {
+    bubble.innerHTML = content;
+  } else {
+    bubble.textContent = content;
+  }
+
   inner.appendChild(row);
   scrollToEnd();
   return bubble;
 }
 
 function addThinking() {
-  return addAgentMsg('TeamLead', '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> 处理中', { cls: 'thinking', html: true });
+  return addAgentMsg('TeamLead',
+    '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> 处理中',
+    { cls: 'thinking', html: true }
+  );
 }
 
 function scrollToEnd() {
@@ -733,6 +827,7 @@ async function send() {
         if (!chunk.startsWith('data:')) continue;
         const payload = chunk.slice(5).trim();
         if (payload === '[DONE]') break;
+
         let obj;
         try { obj = JSON.parse(payload); } catch (e) { continue; }
 
@@ -756,10 +851,14 @@ async function send() {
             const oldRow = document.querySelector('[data-thinking="1"]');
             if (oldRow) oldRow.remove();
           }
-          addAgentMsg(obj.speaker, obj.content);
+          // ★ 核心改动：把 sources 传给 addAgentMsg，气泡下方单独渲染
+          addAgentMsg(obj.speaker, obj.content, {
+            sources: obj.sources || [],
+          });
         }
       }
     }
+
     const stillThinking = document.querySelector('[data-thinking="1"]');
     if (stillThinking) {
       stillThinking.remove();
@@ -770,6 +869,7 @@ async function send() {
     if (oldRow) oldRow.remove();
     addAgentMsg('System', '连接失败：' + e.message + '\n请确认后端已启动（端口 9000）。', { cls: 'error' });
   }
+
   busy = false;
   sbtn.disabled = false;
   if (stopBtn) stopBtn.disabled = true;
