@@ -23,14 +23,13 @@
   --user-text: #c0306a;
   --radius: 10px;
   --radius-lg: 14px;
-
-  --c-tl: #b06ce0;     --c-tl-bg: rgba(176,108,224,0.12);
-  --c-ld: #ff69b4;     --c-ld-bg: rgba(255,105,180,0.12);
-  --c-po: #5b9ef0;     --c-po-bg: rgba(91,158,240,0.12);
-  --c-so: #ff8c42;     --c-so-bg: rgba(255,140,66,0.12);
-  --c-na: #52c97a;     --c-na-bg: rgba(82,201,122,0.12);
-  --c-ur: #e055a0;     --c-ur-bg: rgba(224,85,160,0.12);
-  --c-sys: #b090a8;    --c-sys-bg: rgba(176,144,168,0.12);
+  --c-tl: #b06ce0;  --c-tl-bg: rgba(176,108,224,0.12);
+  --c-ld: #ff69b4;  --c-ld-bg: rgba(255,105,180,0.12);
+  --c-po: #5b9ef0;  --c-po-bg: rgba(91,158,240,0.12);
+  --c-so: #ff8c42;  --c-so-bg: rgba(255,140,66,0.12);
+  --c-na: #52c97a;  --c-na-bg: rgba(82,201,122,0.12);
+  --c-ur: #e055a0;  --c-ur-bg: rgba(224,85,160,0.12);
+  --c-sys: #b090a8; --c-sys-bg: rgba(176,144,168,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -43,53 +42,25 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
-.app {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  height: 100vh;
-  width: 100vw;
-}
-.sidebar {
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+.app { display: grid; grid-template-columns: 280px 1fr; height: 100vh; width: 100vw; }
+.sidebar { background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
 .brand { padding: 22px 22px 18px; border-bottom: 1px solid var(--border); }
 .brand-row { display: flex; align-items: center; gap: 10px; }
-.brand-logo {
-  width: 32px; height: 32px; border-radius: 9px;
-  background: linear-gradient(135deg, #ffb3d9, #ff69b4);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; color: #7a0040; font-weight: 700;
-}
+.brand-logo { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg,#ffb3d9,#ff69b4); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #7a0040; font-weight: 700; }
 .brand-title { font-size: 15px; font-weight: 600; }
 .brand-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.5px; }
-.section-label {
-  padding: 18px 22px 10px;
-  font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--text-tertiary); font-weight: 500;
-}
+.section-label { padding: 18px 22px 10px; font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; }
 .member-list { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; overflow-y: auto; }
-.member {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px; border-radius: var(--radius);
-  transition: background 0.15s; cursor: default;
-}
+.member { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius); transition: background 0.15s; cursor: default; }
 .member:hover { background: var(--bg-card); }
-.member-avatar {
-  width: 34px; height: 34px; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600; flex-shrink: 0;
-}
-.av-tl { background: var(--c-tl-bg); color: var(--c-tl); }
-.av-ld { background: var(--c-ld-bg); color: var(--c-ld); }
-.av-po { background: var(--c-po-bg); color: var(--c-po); }
-.av-so { background: var(--c-so-bg); color: var(--c-so); }
-.av-na { background: var(--c-na-bg); color: var(--c-na); }
-.av-ur { background: var(--c-ur-bg); color: var(--c-ur); }
-.av-sys{ background: var(--c-sys-bg); color: var(--c-sys); }
+.member-avatar { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.av-tl  { background: var(--c-tl-bg);  color: var(--c-tl); }
+.av-ld  { background: var(--c-ld-bg);  color: var(--c-ld); }
+.av-po  { background: var(--c-po-bg);  color: var(--c-po); }
+.av-so  { background: var(--c-so-bg);  color: var(--c-so); }
+.av-na  { background: var(--c-na-bg);  color: var(--c-na); }
+.av-ur  { background: var(--c-ur-bg);  color: var(--c-ur); }
+.av-sys { background: var(--c-sys-bg); color: var(--c-sys); }
 .av-user { background: rgba(159,225,203,0.16); color: #9fe1cb; }
 .member-text { flex: 1; min-width: 0; }
 .member-name { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -102,46 +73,24 @@ body {
 .legend { padding: 12px 22px 18px; border-top: 1px solid var(--border); display: flex; gap: 14px; font-size: 11px; color: var(--text-tertiary); }
 .legend-item { display: flex; align-items: center; gap: 5px; }
 .main { display: flex; flex-direction: column; background: var(--bg-main); overflow: hidden; }
-.topbar {
-  height: 60px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 0 28px; gap: 14px;
-  background: var(--bg-main); flex-shrink: 0;
-}
+.topbar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 14px; background: var(--bg-main); flex-shrink: 0; }
 .topbar-title { font-size: 14px; font-weight: 500; }
 .topbar-meta { font-size: 12px; color: var(--text-tertiary); }
 .spacer { flex: 1; }
-.session-badge {
-  font-size: 11px; padding: 4px 10px; border-radius: 6px;
-  background: var(--bg-card); color: var(--text-secondary);
-  border: 1px solid var(--border);
-  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
-}
+.session-badge { font-size: 11px; padding: 4px 10px; border-radius: 6px; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); font-family: ui-monospace,'SF Mono',Consolas,monospace; }
 .session-badge.active { background: rgba(255,105,180,0.1); color: var(--accent); border-color: rgba(255,105,180,0.3); }
-.btn {
-  height: 32px; padding: 0 14px; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text-primary); font-size: 12.5px; cursor: pointer;
-  transition: all 0.15s; font-family: inherit;
-}
+.btn { height: 32px; padding: 0 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 12.5px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
 .btn:hover { background: var(--bg-card-hover); border-color: var(--border-strong); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-danger { background: rgba(232,75,75,0.06); border-color: rgba(232,75,75,0.2); color: #c04040; }
 .btn-danger:hover { background: rgba(232,75,75,0.12); border-color: rgba(232,75,75,0.35); color: #a03030; }
 .chat-scroll { flex: 1; overflow-y: auto; padding: 32px 0; }
-.chat-inner {
-  max-width: 920px; margin: 0 auto; padding: 0 32px;
-  display: flex; flex-direction: column; gap: 22px;
-}
+.chat-inner { max-width: 920px; margin: 0 auto; padding: 0 32px; display: flex; flex-direction: column; gap: 22px; }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
 .empty-state h2 { font-size: 22px; font-weight: 500; color: var(--text-primary); margin-bottom: 10px; }
 .empty-state p { font-size: 14px; max-width: 480px; margin: 0 auto 28px; line-height: 1.7; }
 .suggestions { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; max-width: 600px; margin: 0 auto; }
-.suggestion {
-  text-align: left; padding: 14px 16px; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  color: var(--text-secondary); font-size: 13px; cursor: pointer;
-  transition: all 0.15s; font-family: inherit; line-height: 1.5;
-}
+.suggestion { text-align: left; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; line-height: 1.5; }
 .suggestion:hover { background: var(--bg-card-hover); border-color: var(--border-strong); color: var(--text-primary); }
 .msg-row { display: flex; gap: 14px; align-items: flex-start; animation: fadeIn 0.4s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
@@ -158,43 +107,19 @@ body {
 .msg-speaker.na  { color: var(--c-na); }
 .msg-speaker.ur  { color: var(--c-ur); }
 .msg-speaker.sys { color: var(--c-sys); }
-
-/* 正文气泡 */
-.msg-bubble {
-  padding: 12px 16px; border-radius: var(--radius-lg);
-  font-size: 14px; line-height: 1.7;
-  background: var(--bg-card); color: var(--text-primary);
-  white-space: pre-wrap; word-break: break-word;
-  border: 1px solid var(--border);
-}
+.msg-bubble { padding: 12px 16px; border-radius: var(--radius-lg); font-size: 14px; line-height: 1.7; background: var(--bg-card); color: var(--text-primary); white-space: pre-wrap; word-break: break-word; border: 1px solid var(--border); }
 .msg-row.user .msg-bubble { background: var(--user-bubble); color: var(--user-text); border-color: rgba(255,105,180,0.3); border-top-right-radius: 4px; }
 .msg-row.bot  .msg-bubble { border-top-left-radius: 4px; }
 .msg-bubble.thinking { color: var(--text-tertiary); font-style: italic; background: transparent; border-style: dashed; }
-.msg-bubble.error { background: rgba(232,75,75,0.06); border-color: rgba(232,75,75,0.2); color: #c04040; }
-.msg-bubble.system { background: var(--c-sys-bg); border-color: rgba(136,142,138,0.25); color: var(--text-secondary); font-size: 13px; font-style: italic; }
+.msg-bubble.error   { background: rgba(232,75,75,0.06); border-color: rgba(232,75,75,0.2); color: #c04040; }
+.msg-bubble.system  { background: var(--c-sys-bg); border-color: rgba(136,142,138,0.25); color: var(--text-secondary); font-size: 13px; font-style: italic; }
 
-/* 参考资料区块 */
-.msg-refs {
-  margin-top: 8px;
-  padding: 10px 14px;
-  background: rgba(255,105,180,0.04);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 12.5px;
-  line-height: 1.9;
-  color: var(--text-secondary);
-}
-.msg-refs-title {
-  font-size: 11px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-.msg-refs-item { display: flex; gap: 8px; align-items: baseline; }
-.msg-refs-num { color: var(--text-tertiary); font-size: 11px; flex-shrink: 0; }
-.msg-refs-body { flex: 1; word-break: break-all; }
+/* ── 参考资料区块 ── */
+.msg-refs { margin-top: 8px; padding: 10px 14px; background: rgba(255,105,180,0.04); border: 1px solid var(--border); border-radius: var(--radius); font-size: 12.5px; line-height: 1.9; }
+.msg-refs-title { font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; margin-bottom: 6px; }
+.msg-refs-item { display: flex; gap: 8px; align-items: baseline; margin-bottom: 2px; }
+.msg-refs-num { color: var(--text-tertiary); font-size: 11px; flex-shrink: 0; min-width: 18px; }
+.msg-refs-body { flex: 1; word-break: break-all; color: var(--text-secondary); }
 .msg-refs-body a { color: var(--accent-dim); text-decoration: none; }
 .msg-refs-body a:hover { color: var(--accent); text-decoration: underline; }
 
@@ -203,26 +128,13 @@ body {
 @keyframes bounce { 0%,80%,100%{transform:scale(.6);opacity:.5} 40%{transform:scale(1);opacity:1} }
 
 .input-bar { border-top: 1px solid var(--border); background: var(--bg-main); padding: 16px 32px 22px; flex-shrink: 0; }
-.input-wrap {
-  max-width: 920px; margin: 0 auto; position: relative;
-  background: var(--bg-input); border: 1px solid var(--border); border-radius: 14px;
-  display: flex; align-items: flex-end; padding: 10px 12px 10px 18px; gap: 10px;
-  transition: border-color 0.15s;
-}
+.input-wrap { max-width: 920px; margin: 0 auto; background: var(--bg-input); border: 1px solid var(--border); border-radius: 14px; display: flex; align-items: flex-end; padding: 10px 12px 10px 18px; gap: 10px; transition: border-color 0.15s; }
 .input-wrap:focus-within { border-color: var(--border-strong); }
-textarea {
-  flex: 1; background: transparent; border: 0; outline: 0;
-  color: var(--text-primary); font-size: 14px; font-family: inherit;
-  line-height: 1.6; resize: none; min-height: 24px; max-height: 160px; padding: 6px 0;
-}
+textarea { flex: 1; background: transparent; border: 0; outline: 0; color: var(--text-primary); font-size: 14px; font-family: inherit; line-height: 1.6; resize: none; min-height: 24px; max-height: 160px; padding: 6px 0; }
 textarea::placeholder { color: var(--text-tertiary); }
 textarea.busy-warn::placeholder { color: #e8a653; animation: flash 0.6s ease-in-out 3; }
 @keyframes flash { 0%,100%{opacity:1} 50%{opacity:.4} }
-.send-btn {
-  height: 32px; width: 32px; border-radius: 8px; background: var(--accent-dim);
-  border: 0; color: #7a0040; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s;
-}
+.send-btn { height: 32px; width: 32px; border-radius: 8px; background: var(--accent-dim); border: 0; color: #7a0040; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
 .send-btn:hover { background: var(--accent); }
 .send-btn:disabled { background: var(--bg-card); color: var(--text-tertiary); cursor: not-allowed; }
 .send-btn svg { width: 16px; height: 16px; }
@@ -348,6 +260,63 @@ function clearEmptyState() {
   const e = document.getElementById('empty-state');
   if (e) e.remove();
 }
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/**
+ * 把研究员回复按 --- 拆成正文和参考资料两部分。
+ * 参考资料格式（研究员输出）：
+ *   📎 参考资料
+ *   1. 机构名·文件名·年份 | https://...
+ *   2. 机构名·文件名·年份
+ */
+function splitReply(content) {
+  // 找到 --- 分隔线
+  const sepIdx = content.search(/\n---+\s*\n/);
+  if (sepIdx === -1) return { body: content.trim(), refs: [] };
+
+  const body    = content.slice(0, sepIdx).trim();
+  const refText = content.slice(sepIdx).replace(/\n---+\s*\n/, '').trim();
+
+  // 去掉 "📎 参考资料" 标题行
+  const lines = refText.split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !/^📎/.test(l) && !/^参考资料/.test(l));
+
+  const refs = lines.map(line => {
+    // 格式：序号. 文字 | URL  或  序号. 文字
+    const m = line.match(/^(\d+)\.\s*(.+)$/);
+    if (!m) return null;
+    const rest     = m[2];
+    const pipeIdx  = rest.indexOf(' | ');
+    if (pipeIdx !== -1) {
+      const label = rest.slice(0, pipeIdx).trim();
+      const url   = rest.slice(pipeIdx + 3).trim();
+      return { num: m[1], label, url: url.startsWith('http') ? url : '' };
+    }
+    return { num: m[1], label: rest.trim(), url: '' };
+  }).filter(Boolean);
+
+  return { body, refs };
+}
+
+function buildRefsHTML(refs) {
+  if (!refs || refs.length === 0) return '';
+  const items = refs.map(r => {
+    const linkPart = r.url
+      ? `<br><a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a>`
+      : '';
+    return `<div class="msg-refs-item">
+      <span class="msg-refs-num">${escHtml(r.num)}.</span>
+      <span class="msg-refs-body">${escHtml(r.label)}${linkPart}</span>
+    </div>`;
+  }).join('');
+  return `<div class="msg-refs">
+    <div class="msg-refs-title">📎 参考资料</div>
+    ${items}
+  </div>`;
+}
 
 function addUserMsg(text) {
   clearEmptyState();
@@ -365,73 +334,25 @@ function addUserMsg(text) {
   scrollToEnd();
 }
 
-/**
- * 把研究员回复拆成正文和参考资料两部分。
- * 研究员用 "---" 分隔正文和参考资料区。
- * 参考资料格式：
- *   📎 参考资料
- *   1. 机构名·文件名·年份 | https://...
- *   2. 机构名·文件名·年份
- */
-function splitReply(content) {
-  const sepIdx = content.indexOf('\n---');
-  if (sepIdx === -1) return { body: content, refs: [] };
-
-  const body    = content.slice(0, sepIdx).trim();
-  const refText = content.slice(sepIdx).replace(/^[\n\-]+/, '').trim();
-
-  // 去掉 "📎 参考资料" 标题行
-  const lines = refText.split('\n')
-    .map(l => l.trim())
-    .filter(l => l && !l.startsWith('📎') && !l.startsWith('参考资料'));
-
-  const refs = lines.map(line => {
-    // 格式：序号. 文字 | URL  或  序号. 文字
-    const m = line.match(/^(\d+)\.\s*(.+)$/);
-    if (!m) return null;
-    const rest   = m[2];
-    const pipeIdx = rest.indexOf(' | ');
-    if (pipeIdx !== -1) {
-      const label = rest.slice(0, pipeIdx).trim();
-      const url   = rest.slice(pipeIdx + 3).trim();
-      return { num: m[1], label, url: url.startsWith('http') ? url : '' };
-    }
-    return { num: m[1], label: rest.trim(), url: '' };
-  }).filter(Boolean);
-
-  return { body, refs };
-}
-
-function buildRefsHTML(refs) {
-  if (!refs || refs.length === 0) return '';
-  const items = refs.map(r => {
-    const linkPart = r.url
-      ? ` <a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a>`
-      : '';
-    return `<div class="msg-refs-item">
-      <span class="msg-refs-num">${r.num}.</span>
-      <span class="msg-refs-body">${escHtml(r.label)}${linkPart}</span>
-    </div>`;
-  }).join('');
-  return `<div class="msg-refs"><div class="msg-refs-title">📎 参考资料</div>${items}</div>`;
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 function addAgentMsg(speaker, content, opts = {}) {
   clearEmptyState();
-  const info = SPEAKER_INFO[speaker] || { tag: speaker.slice(0,2).toUpperCase(), cls:'sys', avCls:'av-sys', label: speaker };
+  const info = SPEAKER_INFO[speaker] || {
+    tag: speaker.slice(0,2).toUpperCase(), cls:'sys', avCls:'av-sys', label: speaker
+  };
   const inner = document.getElementById('chat-inner');
   const row   = document.createElement('div');
   row.className = 'msg-row bot';
 
   const bubbleCls = opts.cls || (info.isSystem ? 'system' : '');
 
-  // 拆正文和参考资料
-  const { body, refs } = splitReply(content);
-  const refsHTML = buildRefsHTML(refs);
+  // 拆正文和参考资料（仅研究员发言，system/error/thinking 不拆）
+  let bodyText  = content;
+  let refsHTML  = '';
+  if (!opts.cls && !opts.html) {
+    const { body, refs } = splitReply(content);
+    bodyText = body;
+    refsHTML = buildRefsHTML(refs);
+  }
 
   row.innerHTML = `
     <div class="msg-avatar ${info.avCls}">${info.tag}</div>
@@ -448,7 +369,7 @@ function addAgentMsg(speaker, content, opts = {}) {
   if (opts.html) {
     bubble.innerHTML = content;
   } else {
-    bubble.textContent = body;   // 只显示正文，参考资料在下方单独渲染
+    bubble.textContent = bodyText;
   }
 
   inner.appendChild(row);
@@ -473,17 +394,17 @@ function quickSend(btn) {
 
 async function send() {
   if (busy) {
-    const inp = document.getElementById('inp');
+    const inp  = document.getElementById('inp');
     const orig = inp.placeholder;
     inp.placeholder = '⏳ 当前任务还没结束，请等待或点击「停止任务」';
     inp.classList.add('busy-warn');
     setTimeout(() => { inp.placeholder = orig; inp.classList.remove('busy-warn'); }, 2500);
     return;
   }
-  const inp    = document.getElementById('inp');
-  const sbtn   = document.getElementById('sbtn');
+  const inp     = document.getElementById('inp');
+  const sbtn    = document.getElementById('sbtn');
   const stopBtn = document.getElementById('stopBtn');
-  const text   = inp.value.trim();
+  const text    = inp.value.trim();
   if (!text) return;
   inp.value = ''; inp.style.height = 'auto';
   busy = true; sbtn.disabled = true;
@@ -496,7 +417,7 @@ async function send() {
   try {
     const resp = await fetch(`${API}/chat/stream`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+      headers: { 'Content-Type':'application/json', 'ngrok-skip-browser-warning':'true' },
       body: JSON.stringify({ message: text, session_id: sid }),
     });
     if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
@@ -571,7 +492,7 @@ async function stopTask() {
       ? '已发送中断信号。当前步骤结束后讨论会停止，对话历史保留，可继续提问。'
       : '当前没有正在进行的任务。', { cls:'system' });
   } catch(e) {
-    addAgentMsg('System','停止请求失败：' + e.message,{cls:'error'});
+    addAgentMsg('System','停止请求失败：' + e.message, {cls:'error'});
   }
   const still = document.querySelector('[data-thinking="1"]');
   if (still) still.remove();
@@ -640,7 +561,7 @@ document.getElementById('inp').addEventListener('keydown', e => {
 });
 document.getElementById('inp').addEventListener('input', function() {
   this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+  this.style.height = Math.min(this.scrollHeight,160) + 'px';
 });
 
 setInterval(pollStatus, 2500);
