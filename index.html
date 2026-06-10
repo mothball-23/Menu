@@ -122,6 +122,22 @@ body {
 .msg-refs-body a { color: var(--accent); text-decoration: none; }
 .msg-refs-body a:hover { color: var(--accent-dim); text-decoration: underline; }
 
+/* ── 图表卡片（可点击放大）── */
+.msg-charts { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+.chart-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--bg-card); transition: all 0.15s; max-width: 380px; }
+.chart-card:hover { border-color: var(--border-strong); box-shadow: 0 4px 14px rgba(26,92,200,0.14); transform: translateY(-1px); }
+.chart-thumb { display: block; width: 100%; max-height: 220px; object-fit: cover; background: #fff; }
+.chart-card-title { padding: 8px 12px; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+
+/* ── 图表大图窗口（可自由开关）── */
+.chart-lightbox { display: none; position: fixed; inset: 0; background: rgba(10,25,50,0.55); backdrop-filter: blur(3px); z-index: 1000; align-items: center; justify-content: center; padding: 40px; animation: fadeIn 0.2s ease; }
+.chart-lightbox.open { display: flex; }
+.chart-lightbox-inner { position: relative; background: var(--bg-card); border-radius: var(--radius-lg); padding: 18px; max-width: 92vw; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(10,25,50,0.4); }
+.chart-lightbox-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; padding-right: 40px; }
+.chart-lightbox-img { max-width: 88vw; max-height: 78vh; object-fit: contain; border-radius: 8px; background: #fff; }
+.chart-close { position: absolute; top: 12px; right: 14px; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 20px; line-height: 26px; text-align: center; cursor: pointer; }
+.chart-close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
 .typing-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); margin: 0 1.5px; animation: bounce 1.2s infinite ease-in-out both; }
 .typing-dot:nth-child(1){animation-delay:-.32s} .typing-dot:nth-child(2){animation-delay:-.16s}
 @keyframes bounce { 0%,80%,100%{transform:scale(.6);opacity:.5} 40%{transform:scale(1);opacity:1} }
@@ -140,11 +156,8 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
 .input-hint { max-width: 920px; margin: 8px auto 0; font-size: 11px; color: var(--text-tertiary); text-align: center; }
 ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(26,92,200,0.12); border-radius: 4px; }
 
-/* 顶栏装饰线 */
 .topbar { border-bottom: 1px solid var(--border); position: relative; }
 .topbar::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:2px; background: linear-gradient(90deg, var(--accent) 0%, transparent 60%); opacity:0.18; }
-
-/* 侧边栏品牌装饰 */
 .brand { background: linear-gradient(135deg, rgba(26,92,200,0.06) 0%, transparent 100%); }
 </style>
 </head>
@@ -221,10 +234,10 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
       <div class="chat-inner" id="chat-inner">
         <div class="empty-state" id="empty-state">
           <h2>欢迎使用海南生态预测团队</h2>
-          <p>团队成员已就位。提出研究任务后，Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
+          <p>团队成员已就位。提出研究任务后，Leader 会判断派遣哪些专家参与多轮群聊讨论。需要图表时，专家会附上可点击放大的图。</p>
           <div class="suggestions">
             <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
-            <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势</button>
+            <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势，并画趋势预测图</button>
             <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
             <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
           </div>
@@ -242,6 +255,15 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
       <div class="input-hint">研究类问题会触发多轮群聊，可能需要一两分钟，请耐心等待。</div>
     </div>
   </main>
+</div>
+
+<!-- 图表大图窗口（点背景 / 右上× / Esc 关闭） -->
+<div class="chart-lightbox" id="chart-lightbox" onclick="closeChart(event)">
+  <div class="chart-lightbox-inner">
+    <button class="chart-close" onclick="closeChart(event)">×</button>
+    <div class="chart-lightbox-title" id="chart-lightbox-title"></div>
+    <img class="chart-lightbox-img" id="chart-lightbox-img" src="" alt="chart">
+  </div>
 </div>
 
 <script>
@@ -314,6 +336,40 @@ function buildRefsHTML(refs) {
   </div>`;
 }
 
+/* ── 图表：卡片 + 可开关大图窗口 ── */
+function buildChartsHTML(charts) {
+  if (!charts || charts.length === 0) return '';
+  const cards = charts.map(c => {
+    const src = c.data || c.url || '';
+    if (!src) return '';
+    const title = escHtml(c.title || '图表');
+    return `<div class="chart-card" data-title="${title}" onclick="openChartFromCard(this)">
+      <img class="chart-thumb" src="${src}" alt="${title}" onerror="this.parentElement.style.display='none'">
+      <div class="chart-card-title">📊 ${title} · 点击放大</div>
+    </div>`;
+  }).join('');
+  return `<div class="msg-charts">${cards}</div>`;
+}
+function openChartFromCard(card) {
+  const img = card.querySelector('img');
+  if (img) openChart(img.src, card.getAttribute('data-title') || '图表');
+}
+function openChart(src, title) {
+  document.getElementById('chart-lightbox-img').src = src;
+  document.getElementById('chart-lightbox-title').textContent = title;
+  document.getElementById('chart-lightbox').classList.add('open');
+}
+function closeChart(e) {
+  if (e) {
+    const t = e.target;
+    // 只在点击背景或关闭按钮时关闭，点图片本身不关
+    if (t.id !== 'chart-lightbox' && !t.classList.contains('chart-close')) return;
+  }
+  document.getElementById('chart-lightbox').classList.remove('open');
+  document.getElementById('chart-lightbox-img').src = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChart(); });
+
 function addUserMsg(text) {
   clearEmptyState();
   const inner = document.getElementById('chat-inner');
@@ -341,12 +397,14 @@ function addAgentMsg(speaker, content, opts = {}) {
 
   const bubbleCls = opts.cls || (info.isSystem ? 'system' : '');
 
-  let bodyText  = content;
-  let refsHTML  = '';
+  let bodyText   = content;
+  let refsHTML   = '';
+  let chartsHTML = '';
   if (!opts.cls && !opts.html) {
     const { body, refs } = splitReply(content);
-    bodyText = body;
-    refsHTML = buildRefsHTML(refs);
+    bodyText   = body;
+    refsHTML   = buildRefsHTML(refs);
+    chartsHTML = buildChartsHTML(opts.charts);
   }
 
   row.innerHTML = `
@@ -358,6 +416,7 @@ function addAgentMsg(speaker, content, opts = {}) {
       </div>
       <div class="msg-bubble ${bubbleCls}"></div>
       ${refsHTML}
+      ${chartsHTML}
     </div>`;
 
   const bubble = row.querySelector('.msg-bubble');
@@ -455,7 +514,7 @@ async function send() {
             const old = document.querySelector('[data-thinking="1"]');
             if (old) old.remove();
           }
-          addAgentMsg(obj.speaker, obj.content);
+          addAgentMsg(obj.speaker, obj.content, { charts: obj.charts });
         }
       }
     }
@@ -527,10 +586,10 @@ async function newChat() {
   document.getElementById('chat-inner').innerHTML = `
     <div class="empty-state" id="empty-state">
       <h2>欢迎使用海南生态预测团队</h2>
-      <p>团队成员已就位。提出研究任务后，Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
+      <p>团队成员已就位。提出研究任务后，Leader 会判断派遣哪些专家参与多轮群聊讨论。需要图表时，专家会附上可点击放大的图。</p>
       <div class="suggestions">
         <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
-        <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势</button>
+        <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势，并画趋势预测图</button>
         <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
         <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
       </div>
