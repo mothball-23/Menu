@@ -3,375 +3,522 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>海南生态预测团队</title>
+<title>海南生态预测团队 · Team Console</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
+:root {
+  --bg-page: #f0f4f9; --bg-sidebar: #e8eef6; --bg-main: #f6f9fc;
+  --bg-card: #ffffff; --bg-card-hover: #eef3fa; --bg-input: #f4f7fb;
+  --border: rgba(30,80,160,0.12); --border-strong: rgba(30,80,160,0.28);
+  --text-primary: #0d1f3c; --text-secondary: #3a5a8a; --text-tertiary: #8aaad0;
+  --accent: #1a5cc8; --accent-dim: #1650b0;
+  --user-bubble: #ddeaf9; --user-text: #0d3d82;
+  --radius: 10px; --radius-lg: 14px;
+  --c-tl: #6236c0;  --c-tl-bg: rgba(98,54,192,0.10);
+  --c-ld: #1a5cc8;  --c-ld-bg: rgba(26,92,200,0.10);
+  --c-po: #0f7c9e;  --c-po-bg: rgba(15,124,158,0.10);
+  --c-so: #1e7a4a;  --c-so-bg: rgba(30,122,74,0.10);
+  --c-na: #0d6688;  --c-na-bg: rgba(13,102,136,0.10);
+  --c-ur: #b35c00;  --c-ur-bg: rgba(179,92,0,0.10);
+  --c-sys: #607d9a; --c-sys-bg: rgba(96,125,154,0.10);
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: "PingFang SC","Microsoft YaHei",-apple-system,Segoe UI,sans-serif;
-             background: #1e1f23; color: #e3e3e3; }
-.app { display: flex; flex-direction: column; height: 100vh; max-width: 1100px; margin: 0 auto;
-       background: #232428; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+       background: var(--bg-page); color: var(--text-primary); font-size: 14px; line-height: 1.6;
+       overflow: hidden; -webkit-font-smoothing: antialiased; }
+.app { display: grid; grid-template-columns: 280px 1fr; height: 100vh; width: 100vw; }
+.sidebar { background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.brand { padding: 22px 22px 18px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(26,92,200,0.06) 0%, transparent 100%); }
+.brand-row { display: flex; align-items: center; gap: 10px; }
+.brand-logo { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg,#3a7bd5,#1a4fa0); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #ffffff; font-weight: 700; }
+.brand-title { font-size: 15px; font-weight: 600; }
+.brand-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.5px; }
+.section-label { padding: 18px 22px 10px; font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; }
+.member-list { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; overflow-y: auto; }
+.member { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius); transition: background 0.15s; }
+.member:hover { background: var(--bg-card); }
+.member-avatar { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.av-tl{background:var(--c-tl-bg);color:var(--c-tl);} .av-ld{background:var(--c-ld-bg);color:var(--c-ld);}
+.av-po{background:var(--c-po-bg);color:var(--c-po);} .av-so{background:var(--c-so-bg);color:var(--c-so);}
+.av-na{background:var(--c-na-bg);color:var(--c-na);} .av-ur{background:var(--c-ur-bg);color:var(--c-ur);}
+.av-sys{background:var(--c-sys-bg);color:var(--c-sys);} .av-user{background:rgba(26,92,200,0.12);color:#1a5cc8;}
+.member-text { flex: 1; min-width: 0; }
+.member-name { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.member-role { font-size: 11.5px; color: var(--text-tertiary); margin-top: 1px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; transition: all 0.25s; }
+.dot.on{background:#1a5cc8;box-shadow:0 0 0 4px rgba(26,92,200,0.18);}
+.dot.busy{background:#e07b00;box-shadow:0 0 0 4px rgba(224,123,0,0.18);animation:pulse 1.4s ease-in-out infinite;}
+.dot.off{background:#b8c8dc;}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.55;transform:scale(.85)} }
+.legend { padding: 12px 22px 18px; border-top: 1px solid var(--border); display: flex; gap: 14px; font-size: 11px; color: var(--text-tertiary); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.main { display: flex; flex-direction: column; background: var(--bg-main); overflow: hidden; }
+.topbar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 14px; background: var(--bg-main); flex-shrink: 0; position: relative; }
+.topbar::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:2px; background: linear-gradient(90deg, var(--accent) 0%, transparent 60%); opacity:0.18; }
+.topbar-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.topbar-meta { font-size: 12px; color: var(--text-tertiary); }
+.spacer { flex: 1; }
+.session-badge { font-size: 11px; padding: 4px 10px; border-radius: 6px; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); font-family: ui-monospace,'SF Mono',Consolas,monospace; }
+.session-badge.active { background: rgba(26,92,200,0.08); color: var(--accent); border-color: rgba(26,92,200,0.25); }
+.btn { height: 32px; padding: 0 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 12.5px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+.btn:hover { background: var(--bg-card-hover); border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-danger { background: rgba(180,30,30,0.05); border-color: rgba(180,30,30,0.18); color: #9a2020; }
+.btn-danger:hover { background: rgba(180,30,30,0.10); border-color: rgba(180,30,30,0.32); color: #7a1818; }
+.chat-scroll { flex: 1; overflow-y: auto; padding: 32px 0; }
+.chat-inner { max-width: 920px; margin: 0 auto; padding: 0 32px; display: flex; flex-direction: column; gap: 22px; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
+.empty-state h2 { font-size: 22px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
+.empty-state p { font-size: 14px; max-width: 480px; margin: 0 auto 28px; line-height: 1.7; color: var(--text-secondary); }
+.suggestions { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; max-width: 600px; margin: 0 auto; }
+.suggestion { text-align: left; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: inherit; line-height: 1.5; }
+.suggestion:hover { background: var(--bg-card-hover); border-color: var(--border-strong); color: var(--text-primary); border-left: 3px solid var(--accent); }
+.msg-row { display: flex; gap: 14px; align-items: flex-start; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.msg-row.user { justify-content: flex-end; }
+.msg-avatar { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; flex-shrink: 0; }
+.msg-body { max-width: 78%; min-width: 0; }
+.msg-row.user .msg-body { display: flex; flex-direction: column; align-items: flex-end; }
+.msg-meta { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-tertiary); margin-bottom: 6px; }
+.msg-speaker { font-weight: 500; color: var(--text-secondary); }
+.msg-speaker.tl{color:var(--c-tl);} .msg-speaker.ld{color:var(--c-ld);} .msg-speaker.po{color:var(--c-po);}
+.msg-speaker.so{color:var(--c-so);} .msg-speaker.na{color:var(--c-na);} .msg-speaker.ur{color:var(--c-ur);}
+.msg-speaker.sys{color:var(--c-sys);}
+.msg-bubble { padding: 12px 16px; border-radius: var(--radius-lg); font-size: 14px; line-height: 1.7; background: var(--bg-card); color: var(--text-primary); word-break: break-word; border: 1px solid var(--border); }
+.msg-row.user .msg-bubble { background: var(--user-bubble); color: var(--user-text); border-color: rgba(26,92,200,0.22); border-top-right-radius: 4px; white-space: pre-wrap; }
+.msg-row.bot  .msg-bubble { border-top-left-radius: 4px; }
+.msg-bubble.thinking { color: var(--text-tertiary); font-style: italic; background: transparent; border-style: dashed; }
+.msg-bubble.error   { background: rgba(180,30,30,0.05); border-color: rgba(180,30,30,0.18); color: #9a2020; white-space: pre-wrap; }
+.msg-bubble.system  { background: var(--c-sys-bg); border-color: rgba(96,125,154,0.22); color: var(--text-secondary); font-size: 13px; font-style: italic; white-space: pre-wrap; }
 
-/* 顶栏 */
-.topbar { display: flex; align-items: center; justify-content: space-between;
-          padding: 12px 18px; background: #2a2b30; border-bottom: 1px solid #1a1b1f; }
-.topbar h1 { font-size: 15px; font-weight: 600; color: #fff; }
-.status-dots { display: flex; gap: 8px; font-size: 11px; color: #888; align-items: center; }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: #555; display: inline-block;
-       margin-right: 3px; vertical-align: middle; }
-.dot.online { background: #5ea474; box-shadow: 0 0 4px #5ea474; }
-.dot.offline { background: #d8584a; }
-
-/* 消息流 */
-.messages { flex: 1; overflow-y: auto; padding: 18px 24px; }
-.messages::-webkit-scrollbar { width: 8px; }
-.messages::-webkit-scrollbar-thumb { background: #3a3b40; border-radius: 4px; }
-
-/* 一条消息(头像 + 气泡) */
-.msg-row { display: flex; gap: 12px; margin: 14px 0; align-items: flex-start; }
-.msg-row.user { flex-direction: row-reverse; }
-
-/* 头像 */
-.avatar { width: 36px; height: 36px; border-radius: 50%; display: flex;
-          align-items: center; justify-content: center; font-size: 12px;
-          font-weight: 700; color: #fff; flex-shrink: 0;
-          background: #6b5fb5;  /* 默认 */ }
-.avatar.user        { background: #555; }
-.avatar.teamlead    { background: #4f9c6e; }
-.avatar.leader      { background: #6b5fb5; }
-.avatar.policy      { background: #b07d3b; }
-.avatar.socioeconomic { background: #c98a44; }
-.avatar.natural     { background: #5ea474; }
-.avatar.urbanization { background: #5d8db5; }
-.avatar.system      { background: #4a4b50; font-size: 14px; }
-
-/* 气泡 */
-.bubble { max-width: 760px; background: #2f3035; border-radius: 10px;
-          padding: 10px 14px; font-size: 14.5px; line-height: 1.65; color: #e3e3e3;
-          word-wrap: break-word; }
-.msg-row.user .bubble { background: #3a3d4a; }
-.msg-row.system .bubble { background: #2a2b30; color: #a0a0a0; font-size: 13px;
-                          font-style: italic; border-left: 2px solid #555; padding-left: 12px; }
-.msg-row.system-error .bubble { color: #ff9090; border-left-color: #d8584a; }
-.msg-row.leader .bubble { background: #34313f; border-left: 3px solid #6b5fb5; }
-
-/* speaker + 时间 */
-.meta { font-size: 11.5px; color: #999; margin-bottom: 5px; display: flex;
-        gap: 6px; align-items: center; }
-.meta .name { font-weight: 600; color: #d0d0d0; }
-.meta .time { color: #777; }
-
-/* Markdown 紧凑 */
-.bubble p { margin: 0 0 8px; }
-.bubble p:last-child { margin-bottom: 0; }
-.bubble h1, .bubble h2, .bubble h3 { margin: 12px 0 6px; font-weight: 600; line-height: 1.3; color: #fff; }
-.bubble h2 { font-size: 16px; }
-.bubble h3 { font-size: 14.5px; }
-.bubble ul, .bubble ol { padding-left: 22px; margin: 6px 0 8px; }
-.bubble li { margin: 2px 0; }
-.bubble code { background: #1c1d20; padding: 1px 5px; border-radius: 3px;
-               font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
-               color: #f0c987; }
-.bubble pre code { display: block; padding: 10px 12px; overflow-x: auto; }
-.bubble table { border-collapse: collapse; margin: 8px 0; font-size: 13.5px; }
-.bubble th, .bubble td { border: 1px solid #444; padding: 5px 9px; }
-.bubble th { background: #34353a; font-weight: 600; color: #f0f0f0; }
-.bubble blockquote { border-left: 3px solid #555; padding-left: 10px; color: #aaa; margin: 6px 0; }
-.bubble strong { color: #fff; }
+/* Markdown */
+.msg-bubble p { margin: 0 0 8px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble h1, .msg-bubble h2, .msg-bubble h3 { margin: 12px 0 6px; font-weight: 600; line-height: 1.3; color: var(--text-primary); }
+.msg-bubble h1 { font-size: 18px; } .msg-bubble h2 { font-size: 16px; } .msg-bubble h3 { font-size: 14.5px; }
+.msg-bubble ul, .msg-bubble ol { padding-left: 22px; margin: 6px 0 8px; }
+.msg-bubble li { margin: 2px 0; }
+.msg-bubble code { background: var(--bg-input); padding: 1px 6px; border-radius: 4px; font-family: ui-monospace,'SF Mono',Consolas,monospace; font-size: 13px; color: #b35c00; }
+.msg-bubble pre code { display: block; padding: 10px 12px; overflow-x: auto; }
+.msg-bubble table { border-collapse: collapse; margin: 10px 0; font-size: 13.5px; }
+.msg-bubble th, .msg-bubble td { border: 1px solid var(--border); padding: 6px 10px; }
+.msg-bubble th { background: var(--bg-input); font-weight: 600; }
+.msg-bubble blockquote { border-left: 3px solid var(--border-strong); padding-left: 10px; color: var(--text-secondary); margin: 6px 0; }
+.msg-bubble strong { color: var(--text-primary); }
 
 /* 图表卡片 */
-.chart-card { margin: 10px 0 4px; border: 1px solid #3a3b40; border-radius: 8px;
-              overflow: hidden; background: #1c1d20; }
-.chart-card-header { display: flex; align-items: center; justify-content: space-between;
-                     padding: 8px 12px; background: #2a2b30; border-bottom: 1px solid #3a3b40;
-                     font-size: 12.5px; }
-.chart-card-title { font-weight: 600; color: #f0f0f0; }
-.chart-card-source { color: #888; font-size: 11.5px; }
-.chart-card-img { display: block; width: 100%; height: auto; cursor: zoom-in;
-                  background: #fff; /* 图本身是白底,这里露出白边 */ }
-.chart-card-caption { padding: 7px 12px 10px; font-size: 12px; color: #999;
-                      line-height: 1.5; border-top: 1px solid #2a2b30; }
+.chart-card { margin: 12px 0 6px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-card); box-shadow: 0 1px 3px rgba(26,92,200,0.04); }
+.chart-card-header { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); font-size: 12.5px; }
+.chart-card-title { font-weight: 600; color: var(--text-primary); }
+.chart-card-source { color: var(--text-tertiary); font-size: 11.5px; }
+.chart-card-img { display: block; width: 100%; height: auto; cursor: zoom-in; background: #fff; }
+.chart-card-caption { padding: 8px 14px 11px; font-size: 12px; color: var(--text-secondary); line-height: 1.55; border-top: 1px solid var(--bg-input); }
 .chart-card-caption:empty { display: none; }
-
-/* 图片放大 */
-.img-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.9);
-                display: flex; align-items: center; justify-content: center;
-                z-index: 9999; cursor: zoom-out; }
+.img-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
 .img-lightbox img { max-width: 92%; max-height: 92%; }
 
-/* 输入区 */
-.composer { border-top: 1px solid #1a1b1f; padding: 12px 18px; background: #2a2b30;
-            display: flex; gap: 10px; align-items: flex-end; }
-.composer textarea { flex: 1; resize: none; background: #1c1d20; color: #e3e3e3;
-                     border: 1px solid #3a3b40; border-radius: 8px; padding: 10px 12px;
-                     font-family: inherit; font-size: 14px; line-height: 1.5;
-                     min-height: 42px; max-height: 160px; outline: none;
-                     transition: border-color 0.15s; }
-.composer textarea:focus { border-color: #6b5fb5; }
-.composer button { border: none; border-radius: 7px; padding: 0 18px; height: 42px;
-                   font-size: 13.5px; font-weight: 600; cursor: pointer;
-                   transition: background 0.15s; color: #fff; }
-.composer .send-btn { background: #6b5fb5; }
-.composer .send-btn:hover { background: #7a6fc4; }
-.composer .send-btn:disabled { background: #444; cursor: not-allowed; }
-.composer .stop-btn { background: #d8584a; }
-.composer .stop-btn:hover { background: #c2493d; }
+.msg-refs { margin-top: 8px; padding: 10px 14px; background: rgba(26,92,200,0.04); border: 1px solid var(--border); border-radius: var(--radius); font-size: 12.5px; line-height: 1.9; }
+.msg-refs-title { font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; margin-bottom: 6px; }
+.msg-refs-item { display: flex; gap: 8px; align-items: baseline; margin-bottom: 2px; }
+.msg-refs-num { color: var(--text-tertiary); font-size: 11px; flex-shrink: 0; min-width: 18px; }
+.msg-refs-body { flex: 1; word-break: break-all; color: var(--text-secondary); }
+.msg-refs-body a { color: var(--accent); text-decoration: none; }
+.msg-refs-body a:hover { color: var(--accent-dim); text-decoration: underline; }
+
+.typing-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); margin: 0 1.5px; animation: bounce 1.2s infinite ease-in-out both; }
+.typing-dot:nth-child(1){animation-delay:-.32s} .typing-dot:nth-child(2){animation-delay:-.16s}
+@keyframes bounce { 0%,80%,100%{transform:scale(.6);opacity:.5} 40%{transform:scale(1);opacity:1} }
+
+.input-bar { border-top: 1px solid var(--border); background: var(--bg-main); padding: 16px 32px 22px; flex-shrink: 0; }
+.input-wrap { max-width: 920px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; display: flex; align-items: flex-end; padding: 10px 12px 10px 18px; gap: 10px; transition: border-color 0.15s; box-shadow: 0 1px 4px rgba(26,92,200,0.06); }
+.input-wrap:focus-within { border-color: var(--border-strong); box-shadow: 0 0 0 3px rgba(26,92,200,0.08); }
+textarea { flex: 1; background: transparent; border: 0; outline: 0; color: var(--text-primary); font-size: 14px; font-family: inherit; line-height: 1.6; resize: none; min-height: 24px; max-height: 160px; padding: 6px 0; }
+textarea::placeholder { color: var(--text-tertiary); }
+textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-out 3; }
+@keyframes flash { 0%,100%{opacity:1} 50%{opacity:.4} }
+.send-btn { height: 32px; width: 32px; border-radius: 8px; background: var(--accent-dim); border: 0; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.send-btn:hover { background: var(--accent); }
+.send-btn:disabled { background: var(--bg-card); color: var(--text-tertiary); cursor: not-allowed; border: 1px solid var(--border); }
+.send-btn svg { width: 16px; height: 16px; }
+.input-hint { max-width: 920px; margin: 8px auto 0; font-size: 11px; color: var(--text-tertiary); text-align: center; }
+::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(26,92,200,0.12); border-radius: 4px; }
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="topbar">
-    <h1>🌴 海南生态预测团队</h1>
-    <div class="status-dots" id="statusDots">
-      <span><span class="dot" id="dot-tl"></span>TL</span>
-      <span><span class="dot" id="dot-ld"></span>Leader</span>
-      <span><span class="dot" id="dot-policy"></span>政策</span>
-      <span><span class="dot" id="dot-socioeconomic"></span>经济</span>
-      <span><span class="dot" id="dot-natural"></span>生态</span>
-      <span><span class="dot" id="dot-urbanization"></span>城规</span>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-row">
+        <div class="brand-logo">海</div>
+        <div><div class="brand-title">海南生态预测团队</div><div class="brand-sub">ECO TEAM CONSOLE</div></div>
+      </div>
     </div>
-  </div>
+    <div class="section-label">Team Members</div>
+    <div class="member-list">
+      <div class="member"><div class="member-avatar av-tl">TL</div><div class="member-text"><div class="member-name">🧭 Team-lead</div><div class="member-role">总协调人</div></div><div class="dot off" id="dot-team-leader"></div></div>
+      <div class="member"><div class="member-avatar av-ld">LD</div><div class="member-text"><div class="member-name">📊 Leader(生态总督)</div><div class="member-role">调度 · 评估 · 汇总</div></div><div class="dot off" id="dot-leader"></div></div>
+      <div class="member"><div class="member-avatar av-po">PO</div><div class="member-text"><div class="member-name">📜 改革发展研究员</div><div class="member-role">耕地红线 · 国土规划 · 政策</div></div><div class="dot off" id="dot-policy"></div></div>
+      <div class="member"><div class="member-avatar av-so">SO</div><div class="member-text"><div class="member-name">💰 社会经济研究员</div><div class="member-role">作物价格 · 农民收入 · 撂荒</div></div><div class="dot off" id="dot-socioeconomic"></div></div>
+      <div class="member"><div class="member-avatar av-na">NA</div><div class="member-text"><div class="member-name">🌿 生态环境研究员</div><div class="member-role">台风 · 气候 · 热带雨林</div></div><div class="dot off" id="dot-natural"></div></div>
+      <div class="member"><div class="member-avatar av-ur">UR</div><div class="member-text"><div class="member-name">🏙️ 城镇资规研究员</div><div class="member-role">城镇化 · 建设用地 · 自贸港</div></div><div class="dot off" id="dot-urbanization"></div></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="dot on"></span>在线</div>
+      <div class="legend-item"><span class="dot busy"></span>工作中</div>
+      <div class="legend-item"><span class="dot off"></span>离线</div>
+    </div>
+  </aside>
 
-  <div class="messages" id="messages"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">AutoGen 群聊控制台</div>
+        <div class="topbar-meta">Leader 调度 · 多轮群聊讨论</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="session-badge" id="sess-badge">无会话</span>
+      <button class="btn" id="stopBtn" onclick="stopTask()" disabled>
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>停止任务
+      </button>
+      <button class="btn" onclick="newChat()">新对话</button>
+      <button class="btn btn-danger" onclick="shutdownAll()">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>关闭系统
+      </button>
+    </div>
 
-  <div class="composer">
-    <textarea id="input" placeholder="输入消息(Enter 发送,Shift+Enter 换行)..." rows="1"></textarea>
-    <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
-    <button class="stop-btn" id="stopBtn" onclick="stopTask()" style="display:none">停止任务</button>
-  </div>
+    <div class="chat-scroll" id="chat-scroll">
+      <div class="chat-inner" id="chat-inner">
+        <div class="empty-state" id="empty-state">
+          <h2>欢迎使用海南生态预测团队</h2>
+          <p>团队成员已就位。提出研究任务后,Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
+          <div class="suggestions">
+            <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
+            <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势,并画趋势预测图</button>
+            <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
+            <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <div class="input-wrap">
+        <textarea id="inp" placeholder="向团队提问,Enter 发送,Shift+Enter 换行..." rows="1"></textarea>
+        <button class="send-btn" id="sbtn" onclick="send()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">研究类问题会触发多轮群聊,可能需要一两分钟,请耐心等待。</div>
+    </div>
+  </main>
 </div>
 
 <script>
 'use strict';
 
-// 角色 → 头像缩写 + class
-const ROLE_META = {
-  user:          { avatar: "YOU", cls: "user", name: "你" },
-  TeamLead:      { avatar: "TL",  cls: "teamlead", name: "🧭 Team-lead" },
-  Leader:        { avatar: "LD",  cls: "leader",   name: "📊 Leader(生态总督)" },
-  policy:        { avatar: "PO",  cls: "policy",        name: "📜 改革发展研究员" },
-  socioeconomic: { avatar: "SO",  cls: "socioeconomic", name: "💰 社会经济研究员" },
-  natural:       { avatar: "NA",  cls: "natural",       name: "🌿 生态环境研究员" },
-  urbanization:  { avatar: "UR",  cls: "urbanization",  name: "🏙️ 城镇资规研究员" },
-  System:        { avatar: "⚙",   cls: "system",        name: "系统" },
+// ════════════════════════════════════════════════════════════════
+// ★ 关键:API 地址。同源(用 http://localhost:9000/ 打开)直接 origin
+// 若必须跨源(如 GitHub Pages),把下面改成稳定的后端公网地址,例如:
+//   const API = 'https://your-stable-tunnel.com';
+// ════════════════════════════════════════════════════════════════
+const API = window.location.origin;
+
+let sid = '', busy = false, statusTimer = null, currentAbort = null;
+
+const SPEAKER_INFO = {
+  TeamLead:      { tag:'TL', cls:'tl', avCls:'av-tl', label:'🧭 Team-lead' },
+  Leader:        { tag:'LD', cls:'ld', avCls:'av-ld', label:'📊 Leader(生态总督)' },
+  policy:        { tag:'PO', cls:'po', avCls:'av-po', label:'📜 改革发展研究员' },
+  socioeconomic: { tag:'SO', cls:'so', avCls:'av-so', label:'💰 社会经济研究员' },
+  natural:       { tag:'NA', cls:'na', avCls:'av-na', label:'🌿 生态环境研究员' },
+  urbanization:  { tag:'UR', cls:'ur', avCls:'av-ur', label:'🏙️ 城镇资规研究员' },
+  System:        { tag:'⚙', cls:'sys', avCls:'av-sys', label:'系统', isSystem:true },
 };
+const STATUS_KEYS = ['team-leader','leader','policy','socioeconomic','natural','urbanization'];
 
-let sessionId = null;
-let isStreaming = false;
-let currentAbort = null;
-let statusTimer = null;
+function fmtTime(){ return new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}); }
+function clearEmptyState(){ const e=document.getElementById('empty-state'); if(e) e.remove(); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function renderMarkdown(text){ if(!text) return ''; try{ return marked.parse(text,{breaks:true,gfm:true}); } catch(e){ return escHtml(text); } }
 
-const messagesEl = document.getElementById('messages');
-const inputEl = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
-const stopBtn = document.getElementById('stopBtn');
-
-function nowTime() {
-  const d = new Date();
-  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+function splitReply(content){
+  const sepIdx = content.search(/\n---+\s*\n/);
+  if (sepIdx === -1) return { body: content.trim(), refs: [] };
+  const body = content.slice(0, sepIdx).trim();
+  const refText = content.slice(sepIdx).replace(/\n---+\s*\n/, '').trim();
+  const lines = refText.split('\n').map(l=>l.trim()).filter(l=>l && !/^📎/.test(l) && !/^参考资料/.test(l));
+  const refs = lines.map(line => {
+    const m = line.match(/^(\d+)\.\s*(.+)$/);
+    if (!m) return null;
+    const rest = m[2], pipeIdx = rest.indexOf(' | ');
+    if (pipeIdx !== -1) {
+      const label = rest.slice(0,pipeIdx).trim(), url = rest.slice(pipeIdx+3).trim();
+      return { num: m[1], label, url: url.startsWith('http') ? url : '' };
+    }
+    return { num: m[1], label: rest.trim(), url: '' };
+  }).filter(Boolean);
+  return { body, refs };
+}
+function buildRefsHTML(refs){
+  if (!refs || refs.length === 0) return '';
+  const items = refs.map(r => {
+    const linkPart = r.url ? `<br><a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a>` : '';
+    return `<div class="msg-refs-item"><span class="msg-refs-num">${escHtml(r.num)}.</span><span class="msg-refs-body">${escHtml(r.label)}${linkPart}</span></div>`;
+  }).join('');
+  return `<div class="msg-refs"><div class="msg-refs-title">📎 参考资料</div>${items}</div>`;
 }
 
-function renderMarkdown(text) {
-  if (!text) return '';
-  try { return marked.parse(text, { breaks: true, gfm: true }); }
-  catch (e) { return text.replace(/</g, '&lt;'); }
-}
-
-function renderChart(chart) {
-  const card = document.createElement('div');
-  card.className = 'chart-card';
-  const header = document.createElement('div');
-  header.className = 'chart-card-header';
-  const t = document.createElement('span');
-  t.className = 'chart-card-title'; t.textContent = chart.title || '图表';
-  const s = document.createElement('span');
-  s.className = 'chart-card-source'; s.textContent = chart.source || '';
+function renderChart(chart){
+  const card = document.createElement('div'); card.className = 'chart-card';
+  const header = document.createElement('div'); header.className = 'chart-card-header';
+  const t = document.createElement('span'); t.className = 'chart-card-title'; t.textContent = chart.title || '图表';
+  const s = document.createElement('span'); s.className = 'chart-card-source'; s.textContent = chart.source || '';
   header.appendChild(t); header.appendChild(s);
-  const img = document.createElement('img');
-  img.className = 'chart-card-img';
+  const img = document.createElement('img'); img.className = 'chart-card-img';
   img.src = chart.data; img.alt = chart.title || '';
   img.addEventListener('click', () => openLightbox(chart.data));
-  const cap = document.createElement('div');
-  cap.className = 'chart-card-caption'; cap.textContent = chart.caption || '';
+  const cap = document.createElement('div'); cap.className = 'chart-card-caption'; cap.textContent = chart.caption || '';
   card.appendChild(header); card.appendChild(img); card.appendChild(cap);
   return card;
 }
-
-function openLightbox(src) {
-  const box = document.createElement('div');
-  box.className = 'img-lightbox';
-  const big = document.createElement('img');
-  big.src = src; box.appendChild(big);
+function openLightbox(src){
+  const box = document.createElement('div'); box.className = 'img-lightbox';
+  const big = document.createElement('img'); big.src = src; box.appendChild(big);
   box.addEventListener('click', () => box.remove());
   document.body.appendChild(box);
 }
 
-function appendMessage(evt) {
-  // 过滤心跳和内部信号
-  if (evt.__heartbeat__) return;
-  if (evt.session_id || evt.error === 'empty') return;
-  if (evt.speaker === 'System' && !evt.content && (!evt.charts || evt.charts.length === 0)) return;
-
-  const meta = ROLE_META[evt.speaker] || { avatar: "??", cls: "", name: evt.label || evt.speaker || "" };
-  const isError = evt.label && (evt.label.includes('🛑') || evt.label.includes('⚠'));
-
-  const row = document.createElement('div');
-  row.className = 'msg-row ' + meta.cls + (isError ? ' system-error' : '');
-
-  // 头像
-  const av = document.createElement('div');
-  av.className = 'avatar ' + meta.cls;
-  av.textContent = meta.avatar;
-  row.appendChild(av);
-
-  // 气泡
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-
-  const metaEl = document.createElement('div');
-  metaEl.className = 'meta';
-  const nameEl = document.createElement('span');
-  nameEl.className = 'name';
-  nameEl.textContent = evt.label || meta.name;
-  const timeEl = document.createElement('span');
-  timeEl.className = 'time';
-  timeEl.textContent = nowTime();
-  metaEl.appendChild(nameEl); metaEl.appendChild(timeEl);
-  bubble.appendChild(metaEl);
-
-  if (evt.content) {
-    const body = document.createElement('div');
-    body.innerHTML = renderMarkdown(evt.content);
-    bubble.appendChild(body);
-  }
-
-  if (Array.isArray(evt.charts)) {
-    evt.charts.forEach(c => bubble.appendChild(renderChart(c)));
-  }
-
-  row.appendChild(bubble);
-  messagesEl.appendChild(row);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+function addUserMsg(text){
+  clearEmptyState();
+  const inner = document.getElementById('chat-inner');
+  const row = document.createElement('div'); row.className = 'msg-row user';
+  row.innerHTML = `
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-speaker">你</span><span>${fmtTime()}</span></div>
+      <div class="msg-bubble"></div>
+    </div>
+    <div class="msg-avatar av-user">YOU</div>`;
+  row.querySelector('.msg-bubble').textContent = text;
+  inner.appendChild(row); scrollToEnd();
 }
 
-async function sendMessage() {
-  const text = inputEl.value.trim();
-  if (!text || isStreaming) return;
-  appendMessage({ speaker: 'user', label: '你', content: text, charts: [] });
-  inputEl.value = ''; inputEl.style.height = 'auto';
+function addAgentMsg(speaker, content, opts={}){
+  clearEmptyState();
+  const info = SPEAKER_INFO[speaker] || { tag: speaker.slice(0,2).toUpperCase(), cls:'sys', avCls:'av-sys', label: speaker };
+  const inner = document.getElementById('chat-inner');
+  const row = document.createElement('div'); row.className = 'msg-row bot';
+  const bubbleCls = opts.cls || (info.isSystem ? 'system' : '');
 
-  setStreaming(true); stopStatusPolling();
+  let bubbleHtml = '', refsHTML = '';
+  if (opts.html) bubbleHtml = content;
+  else if (opts.cls === 'system' || opts.cls === 'error' || opts.cls === 'thinking') bubbleHtml = escHtml(content);
+  else {
+    const { body, refs } = splitReply(content);
+    bubbleHtml = renderMarkdown(body);
+    refsHTML = buildRefsHTML(refs);
+  }
+
+  row.innerHTML = `
+    <div class="msg-avatar ${info.avCls}">${info.tag}</div>
+    <div class="msg-body">
+      <div class="msg-meta"><span class="msg-speaker ${info.cls}">${info.label}</span><span>${fmtTime()}</span></div>
+      <div class="msg-bubble ${bubbleCls}">${bubbleHtml}</div>
+      ${refsHTML}
+    </div>`;
+
+  if (Array.isArray(opts.charts) && opts.charts.length > 0) {
+    const body = row.querySelector('.msg-body');
+    opts.charts.forEach(c => body.appendChild(renderChart(c)));
+  }
+  inner.appendChild(row); scrollToEnd();
+  return row;
+}
+
+function addThinking(){
+  return addAgentMsg('TeamLead',
+    '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> 处理中',
+    { cls:'thinking', html:true });
+}
+function scrollToEnd(){ const s=document.getElementById('chat-scroll'); s.scrollTop=s.scrollHeight; }
+function quickSend(btn){ document.getElementById('inp').value = btn.textContent; send(); }
+
+async function send(){
+  if (busy) {
+    const inp = document.getElementById('inp'), orig = inp.placeholder;
+    inp.placeholder = '⏳ 当前任务还没结束,请等待或点击「停止任务」';
+    inp.classList.add('busy-warn');
+    setTimeout(() => { inp.placeholder = orig; inp.classList.remove('busy-warn'); }, 2500);
+    return;
+  }
+  const inp = document.getElementById('inp'), sbtn = document.getElementById('sbtn'), stopBtn = document.getElementById('stopBtn');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = ''; inp.style.height = 'auto';
+  busy = true; sbtn.disabled = true; stopBtn.disabled = false;
+
+  stopStatusPolling();
   currentAbort = new AbortController();
 
+  addUserMsg(text);
+  const thinking = addThinking(); thinking.dataset.thinking = '1';
+
   try {
-    const resp = await fetch('/chat/stream', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, session_id: sessionId || '' }),
+    const resp = await fetch(`${API}/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, session_id: sid }),
       signal: currentAbort.signal,
     });
-    if (!resp.ok) {
-      appendMessage({ speaker: 'System', label: '🛑 系统',
-                      content: `HTTP ${resp.status}`, charts: [] });
-      return;
-    }
+    if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+
     const reader = resp.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let buf = '';
+    const decoder = new TextDecoder();
+    let buf = '', firstAgentArrived = false;
+
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
       buf += decoder.decode(value, { stream: true });
-      while (buf.includes('\n\n')) {
-        const idx = buf.indexOf('\n\n');
-        const block = buf.slice(0, idx); buf = buf.slice(idx + 2);
-        for (const line of block.split('\n')) {
-          const ln = line.trim();
-          if (!ln || ln.startsWith(':')) continue;
-          if (!ln.startsWith('data:')) continue;
-          const payload = ln.slice(5).trim();
-          if (payload === '[DONE]') return;
-          try {
-            const evt = JSON.parse(payload);
-            if (evt.session_id) sessionId = evt.session_id;
-            appendMessage(evt);
-          } catch (e) { console.warn('SSE parse:', e); }
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const block = buf.slice(0, idx).trim();
+        buf = buf.slice(idx + 2);
+        if (!block) continue;
+        if (block.startsWith(':')) continue;            // SSE 心跳注释
+        if (!block.startsWith('data:')) continue;
+        const payload = block.slice(5).trim();
+        if (payload === '[DONE]') break;
+        let obj; try { obj = JSON.parse(payload); } catch(e) { continue; }
+
+        if (obj.session_id) {
+          sid = obj.session_id;
+          const badge = document.getElementById('sess-badge');
+          badge.textContent = '会话进行中'; badge.title = '会话 ID: ' + sid; badge.className = 'session-badge active';
+          continue;
+        }
+        if (obj.error) {
+          const old = document.querySelector('[data-thinking="1"]'); if (old) old.remove();
+          addAgentMsg('System', '出错: ' + obj.error, { cls:'error' }); continue;
+        }
+        if (obj.__heartbeat__) continue;                 // 心跳事件,忽略
+        if (obj.speaker && (obj.content || (obj.charts && obj.charts.length))) {
+          if (!firstAgentArrived) {
+            firstAgentArrived = true;
+            const old = document.querySelector('[data-thinking="1"]'); if (old) old.remove();
+          }
+          addAgentMsg(obj.speaker, obj.content || '', { charts: obj.charts });
         }
       }
     }
-  } catch (e) {
-    if (e.name === 'AbortError') {
-      appendMessage({ speaker: 'System', label: '⚙️ 系统', content: '已取消请求。', charts: [] });
-    } else {
-      appendMessage({ speaker: 'System', label: '🛑 系统',
-                      content: `网络错误: ${e.message}`, charts: [] });
-    }
-  } finally {
-    setStreaming(false); currentAbort = null; startStatusPolling();
+    const still = document.querySelector('[data-thinking="1"]');
+    if (still) { still.remove(); addAgentMsg('System','未收到团队回复,请重试',{cls:'error'}); }
+  } catch(e) {
+    const old = document.querySelector('[data-thinking="1"]'); if (old) old.remove();
+    if (e.name === 'AbortError') addAgentMsg('System','已取消请求。', { cls:'system' });
+    else addAgentMsg('System','连接失败: ' + e.message + '\n请确认后端已启动(http://localhost:9000)', { cls:'error' });
   }
+  busy = false; sbtn.disabled = false; stopBtn.disabled = true;
+  currentAbort = null;
+  startStatusPolling();
+  inp.focus();
 }
 
-async function stopTask() {
-  if (!isStreaming) return;
+async function stopTask(){
+  if (!sid || !busy) return;
+  if (!confirm('确定要中断当前讨论吗?')) return;
+  const stopBtn = document.getElementById('stopBtn');
+  stopBtn.disabled = true; stopBtn.textContent = '停止中...';
   try {
-    await fetch('/stop', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: '', session_id: sessionId || '' }) });
-  } catch (e) {}
+    const r = await fetch(`${API}/stop`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message:'stop', session_id: sid }),
+    });
+    const data = await r.json();
+    addAgentMsg('System', data.stopped
+      ? '已发送中断信号。当前步骤结束后讨论会停止,对话历史保留,可继续提问。'
+      : '当前没有正在进行的任务。', { cls:'system' });
+  } catch(e) {
+    addAgentMsg('System','停止请求失败: ' + e.message, {cls:'error'});
+  }
   if (currentAbort) currentAbort.abort();
+  const still = document.querySelector('[data-thinking="1"]'); if (still) still.remove();
+  busy = false; document.getElementById('sbtn').disabled = false;
+  setTimeout(() => {
+    stopBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>停止任务`;
+  }, 500);
 }
 
-function setStreaming(on) {
-  isStreaming = on;
-  sendBtn.disabled = on;
-  sendBtn.style.display = on ? 'none' : 'inline-block';
-  stopBtn.style.display = on ? 'inline-block' : 'none';
-}
-
-inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
-inputEl.addEventListener('input', () => {
-  inputEl.style.height = 'auto';
-  inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
-});
-
-// /status 轮询 15s,流式期间停
-async function fetchStatus() {
+async function shutdownAll(){
+  if (!confirm('确定要关闭整个后端服务吗?')) return;
   try {
-    const r = await fetch('/status');
+    addAgentMsg('System','正在关闭后端服务...',{cls:'system'});
+    await fetch(`${API}/shutdown`, { method:'POST' });
+  } catch(e) {}
+  setTimeout(() => {
+    addAgentMsg('System','后端服务已关闭。如需重新使用,请在终端重新运行启动器。',{cls:'error'});
+    document.getElementById('sbtn').disabled = true;
+    document.getElementById('stopBtn').disabled = true;
+    STATUS_KEYS.forEach(k => { const el = document.getElementById('dot-'+k); if(el) el.className = 'dot off'; });
+  }, 1500);
+}
+
+async function newChat(){
+  if (sid) {
+    try {
+      await fetch(`${API}/reset`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ message:'reset', session_id: sid }),
+      });
+    } catch(e) {}
+  }
+  sid = '';
+  const badge = document.getElementById('sess-badge');
+  badge.textContent = '无会话'; badge.title = ''; badge.className = 'session-badge';
+  document.getElementById('chat-inner').innerHTML = `
+    <div class="empty-state" id="empty-state">
+      <h2>欢迎使用海南生态预测团队</h2>
+      <p>团队成员已就位。提出研究任务后,Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
+        <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势,并画趋势预测图</button>
+        <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
+        <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
+      </div>
+    </div>`;
+}
+
+async function pollStatus(){
+  try {
+    const r = await fetch(`${API}/status`);
     if (!r.ok) return;
-    const s = await r.json();
-    const map = {
-      'dot-tl': s['team-leader']?.online,
-      'dot-ld': s['leader']?.online,
-      'dot-policy': s['policy']?.online,
-      'dot-socioeconomic': s['socioeconomic']?.online,
-      'dot-natural': s['natural']?.online,
-      'dot-urbanization': s['urbanization']?.online,
-    };
-    for (const [id, ok] of Object.entries(map)) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      el.classList.remove('online', 'offline');
-      if (ok === true) el.classList.add('online');
-      else if (ok === false) el.classList.add('offline');
-    }
-  } catch (e) {}
+    const data = await r.json();
+    STATUS_KEYS.forEach(k => {
+      const el = document.getElementById('dot-'+k);
+      if (!el) return;
+      const a = data[k];
+      el.className = 'dot ' + (!a || !a.online ? 'off' : (a.busy ? 'busy' : 'on'));
+    });
+  } catch(e) {}
 }
-function startStatusPolling() {
+function startStatusPolling(){
   if (statusTimer) return;
-  fetchStatus();
-  statusTimer = setInterval(fetchStatus, 15000);
+  pollStatus();
+  statusTimer = setInterval(pollStatus, 15000);     // ★ 15s 一次,不再 2.5s
 }
-function stopStatusPolling() {
+function stopStatusPolling(){
   if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
 }
 
-startStatusPolling();
-appendMessage({
-  speaker: 'TeamLead', label: '🧭 Team-lead',
-  content: '你好,我是团队协调员。试试:\n\n- **聊天** —— "你好"\n- **介绍团队** —— "团队有哪些成员"\n- **综合研究** —— "分析海南未来 5 年耕地撂荒趋势,并画趋势预测图"',
-  charts: []
+document.getElementById('inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
 });
+document.getElementById('inp').addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+});
+
+startStatusPolling();
 </script>
 </body>
 </html>
