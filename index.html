@@ -1,157 +1,199 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>海南生态预测团队</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f3f1ec; color: #1f1e1c; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海南生态预测团队</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: "PingFang SC","Microsoft YaHei",-apple-system,Segoe UI,sans-serif;
+             background: #1e1f23; color: #e3e3e3; }
+.app { display: flex; flex-direction: column; height: 100vh; max-width: 1100px; margin: 0 auto;
+       background: #232428; }
 
-    .app { display: flex; flex-direction: column; height: 100vh; max-width: 900px; margin: 0 auto; background: #faf9f7; box-shadow: 0 0 24px rgba(0,0,0,0.04); }
+/* 顶栏 */
+.topbar { display: flex; align-items: center; justify-content: space-between;
+          padding: 12px 18px; background: #2a2b30; border-bottom: 1px solid #1a1b1f; }
+.topbar h1 { font-size: 15px; font-weight: 600; color: #fff; }
+.status-dots { display: flex; gap: 8px; font-size: 11px; color: #888; align-items: center; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #555; display: inline-block;
+       margin-right: 3px; vertical-align: middle; }
+.dot.online { background: #5ea474; box-shadow: 0 0 4px #5ea474; }
+.dot.offline { background: #d8584a; }
 
-    /* 顶栏 */
-    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid #e3e1dc; background: #fff; }
-    .topbar h1 { margin: 0; font-size: 16px; font-weight: 600; color: #2a2926; }
-    .status-dots { display: flex; gap: 6px; align-items: center; font-size: 12px; color: #7a7672; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #c8c5be; }
-    .dot.online { background: #5ea474; }
-    .dot.offline { background: #d8584a; }
+/* 消息流 */
+.messages { flex: 1; overflow-y: auto; padding: 18px 24px; }
+.messages::-webkit-scrollbar { width: 8px; }
+.messages::-webkit-scrollbar-thumb { background: #3a3b40; border-radius: 4px; }
 
-    /* 消息流 */
-    .messages { flex: 1; overflow-y: auto; padding: 16px 22px; scroll-behavior: smooth; }
+/* 一条消息(头像 + 气泡) */
+.msg-row { display: flex; gap: 12px; margin: 14px 0; align-items: flex-start; }
+.msg-row.user { flex-direction: row-reverse; }
 
-    /* 消息气泡 —— Claude 风 */
-    .msg-bubble { max-width: 760px; margin: 14px 0; padding: 14px 18px; border-radius: 12px; background: #faf9f7; font-size: 15px; line-height: 1.65; color: #1f1e1c; word-wrap: break-word; }
-    .msg-bubble .speaker { font-weight: 600; font-size: 13px; color: #7a7672; margin-bottom: 6px; }
-    .msg-bubble.user { background: #ecebe8; margin-left: auto; max-width: 600px; }
-    .msg-bubble.system { background: #fff8e5; font-size: 13px; color: #7a6a3a; }
-    .msg-bubble.system-error { background: #fde8e5; color: #8a3a2e; }
-    .msg-bubble.leader { background: #f0eef8; border-left: 3px solid #6b5fb5; }
-    .msg-bubble.teamlead { background: #eef5f0; border-left: 3px solid #4f9c6e; }
+/* 头像 */
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: flex;
+          align-items: center; justify-content: center; font-size: 12px;
+          font-weight: 700; color: #fff; flex-shrink: 0;
+          background: #6b5fb5;  /* 默认 */ }
+.avatar.user        { background: #555; }
+.avatar.teamlead    { background: #4f9c6e; }
+.avatar.leader      { background: #6b5fb5; }
+.avatar.policy      { background: #b07d3b; }
+.avatar.socioeconomic { background: #c98a44; }
+.avatar.natural     { background: #5ea474; }
+.avatar.urbanization { background: #5d8db5; }
+.avatar.system      { background: #4a4b50; font-size: 14px; }
 
-    /* Markdown 紧凑感 */
-    .msg-bubble p { margin: 0 0 10px; }
-    .msg-bubble p:last-child { margin-bottom: 0; }
-    .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 { margin: 14px 0 8px; font-weight: 600; line-height: 1.3; }
-    .msg-bubble h2 { font-size: 17px; }
-    .msg-bubble h3 { font-size: 15px; }
-    .msg-bubble ul, .msg-bubble ol { padding-left: 22px; margin: 6px 0 10px; }
-    .msg-bubble li { margin: 3px 0; }
-    .msg-bubble code { background: #efeeea; padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
-    .msg-bubble pre code { display: block; padding: 10px 12px; overflow-x: auto; }
-    .msg-bubble table { border-collapse: collapse; margin: 10px 0; font-size: 14px; }
-    .msg-bubble th, .msg-bubble td { border: 1px solid #d8d6d1; padding: 6px 10px; }
-    .msg-bubble th { background: #efeeea; font-weight: 600; }
-    .msg-bubble blockquote { border-left: 3px solid #d4d2cd; padding-left: 12px; color: #555; margin: 8px 0; }
+/* 气泡 */
+.bubble { max-width: 760px; background: #2f3035; border-radius: 10px;
+          padding: 10px 14px; font-size: 14.5px; line-height: 1.65; color: #e3e3e3;
+          word-wrap: break-word; }
+.msg-row.user .bubble { background: #3a3d4a; }
+.msg-row.system .bubble { background: #2a2b30; color: #a0a0a0; font-size: 13px;
+                          font-style: italic; border-left: 2px solid #555; padding-left: 12px; }
+.msg-row.system-error .bubble { color: #ff9090; border-left-color: #d8584a; }
+.msg-row.leader .bubble { background: #34313f; border-left: 3px solid #6b5fb5; }
 
-    /* 图表卡片 —— Claude artifact 风 */
-    .chart-card { margin: 14px 0 6px; border: 1px solid #e3e1dc; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-    .chart-card-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f5f4f0; border-bottom: 1px solid #e3e1dc; font-size: 13px; }
-    .chart-card-title { font-weight: 600; color: #2a2926; }
-    .chart-card-source { color: #7a7672; font-size: 12px; }
-    .chart-card-img { display: block; width: 100%; height: auto; cursor: zoom-in; }
-    .chart-card-caption { padding: 8px 14px 12px; font-size: 12.5px; color: #6b6864; line-height: 1.55; border-top: 1px solid #f0eee9; }
-    .chart-card-caption:empty { display: none; }
+/* speaker + 时间 */
+.meta { font-size: 11.5px; color: #999; margin-bottom: 5px; display: flex;
+        gap: 6px; align-items: center; }
+.meta .name { font-weight: 600; color: #d0d0d0; }
+.meta .time { color: #777; }
 
-    /* 图片 lightbox */
-    .img-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
-    .img-lightbox img { max-width: 92%; max-height: 92%; }
+/* Markdown 紧凑 */
+.bubble p { margin: 0 0 8px; }
+.bubble p:last-child { margin-bottom: 0; }
+.bubble h1, .bubble h2, .bubble h3 { margin: 12px 0 6px; font-weight: 600; line-height: 1.3; color: #fff; }
+.bubble h2 { font-size: 16px; }
+.bubble h3 { font-size: 14.5px; }
+.bubble ul, .bubble ol { padding-left: 22px; margin: 6px 0 8px; }
+.bubble li { margin: 2px 0; }
+.bubble code { background: #1c1d20; padding: 1px 5px; border-radius: 3px;
+               font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
+               color: #f0c987; }
+.bubble pre code { display: block; padding: 10px 12px; overflow-x: auto; }
+.bubble table { border-collapse: collapse; margin: 8px 0; font-size: 13.5px; }
+.bubble th, .bubble td { border: 1px solid #444; padding: 5px 9px; }
+.bubble th { background: #34353a; font-weight: 600; color: #f0f0f0; }
+.bubble blockquote { border-left: 3px solid #555; padding-left: 10px; color: #aaa; margin: 6px 0; }
+.bubble strong { color: #fff; }
 
-    /* 输入区 */
-    .composer { border-top: 1px solid #e3e1dc; padding: 12px 18px; background: #fff; display: flex; gap: 10px; align-items: flex-end; }
-    .composer textarea { flex: 1; resize: none; border: 1px solid #d8d6d1; border-radius: 10px; padding: 10px 14px; font-family: inherit; font-size: 15px; line-height: 1.5; min-height: 44px; max-height: 160px; outline: none; transition: border-color 0.15s; }
-    .composer textarea:focus { border-color: #6b5fb5; }
-    .composer button { border: none; border-radius: 8px; padding: 0 16px; height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
-    .composer .send-btn { background: #6b5fb5; color: white; }
-    .composer .send-btn:hover { background: #5a4fa0; }
-    .composer .send-btn:disabled { background: #b8b3d4; cursor: not-allowed; }
-    .composer .stop-btn { background: #d8584a; color: white; }
-    .composer .stop-btn:hover { background: #c2493d; }
+/* 图表卡片 */
+.chart-card { margin: 10px 0 4px; border: 1px solid #3a3b40; border-radius: 8px;
+              overflow: hidden; background: #1c1d20; }
+.chart-card-header { display: flex; align-items: center; justify-content: space-between;
+                     padding: 8px 12px; background: #2a2b30; border-bottom: 1px solid #3a3b40;
+                     font-size: 12.5px; }
+.chart-card-title { font-weight: 600; color: #f0f0f0; }
+.chart-card-source { color: #888; font-size: 11.5px; }
+.chart-card-img { display: block; width: 100%; height: auto; cursor: zoom-in;
+                  background: #fff; /* 图本身是白底,这里露出白边 */ }
+.chart-card-caption { padding: 7px 12px 10px; font-size: 12px; color: #999;
+                      line-height: 1.5; border-top: 1px solid #2a2b30; }
+.chart-card-caption:empty { display: none; }
 
-    /* 正在输入指示 */
-    .typing { padding: 8px 14px; font-size: 13px; color: #7a7672; font-style: italic; }
-  </style>
+/* 图片放大 */
+.img-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+                display: flex; align-items: center; justify-content: center;
+                z-index: 9999; cursor: zoom-out; }
+.img-lightbox img { max-width: 92%; max-height: 92%; }
+
+/* 输入区 */
+.composer { border-top: 1px solid #1a1b1f; padding: 12px 18px; background: #2a2b30;
+            display: flex; gap: 10px; align-items: flex-end; }
+.composer textarea { flex: 1; resize: none; background: #1c1d20; color: #e3e3e3;
+                     border: 1px solid #3a3b40; border-radius: 8px; padding: 10px 12px;
+                     font-family: inherit; font-size: 14px; line-height: 1.5;
+                     min-height: 42px; max-height: 160px; outline: none;
+                     transition: border-color 0.15s; }
+.composer textarea:focus { border-color: #6b5fb5; }
+.composer button { border: none; border-radius: 7px; padding: 0 18px; height: 42px;
+                   font-size: 13.5px; font-weight: 600; cursor: pointer;
+                   transition: background 0.15s; color: #fff; }
+.composer .send-btn { background: #6b5fb5; }
+.composer .send-btn:hover { background: #7a6fc4; }
+.composer .send-btn:disabled { background: #444; cursor: not-allowed; }
+.composer .stop-btn { background: #d8584a; }
+.composer .stop-btn:hover { background: #c2493d; }
+</style>
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
-      <h1>🌴 海南生态预测团队</h1>
-      <div class="status-dots" id="statusDots">
-        <span class="dot" id="dot-tl"></span> TL
-        <span class="dot" id="dot-ld"></span> Leader
-        <span class="dot" id="dot-policy"></span> 政策
-        <span class="dot" id="dot-socioeconomic"></span> 经济
-        <span class="dot" id="dot-natural"></span> 生态
-        <span class="dot" id="dot-urbanization"></span> 城规
-      </div>
-    </div>
-
-    <div class="messages" id="messages"></div>
-
-    <div class="composer">
-      <textarea id="input" placeholder="请输入消息(回车发送,Shift+回车换行)..." rows="1"></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
-      <button class="stop-btn" id="stopBtn" onclick="stopTask()" style="display:none">停止</button>
+<div class="app">
+  <div class="topbar">
+    <h1>🌴 海南生态预测团队</h1>
+    <div class="status-dots" id="statusDots">
+      <span><span class="dot" id="dot-tl"></span>TL</span>
+      <span><span class="dot" id="dot-ld"></span>Leader</span>
+      <span><span class="dot" id="dot-policy"></span>政策</span>
+      <span><span class="dot" id="dot-socioeconomic"></span>经济</span>
+      <span><span class="dot" id="dot-natural"></span>生态</span>
+      <span><span class="dot" id="dot-urbanization"></span>城规</span>
     </div>
   </div>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="composer">
+    <textarea id="input" placeholder="输入消息(Enter 发送,Shift+Enter 换行)..." rows="1"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+    <button class="stop-btn" id="stopBtn" onclick="stopTask()" style="display:none">停止任务</button>
+  </div>
+</div>
 
 <script>
 'use strict';
 
-// ════════════════════════════════════════════════
-// 状态
-// ════════════════════════════════════════════════
+// 角色 → 头像缩写 + class
+const ROLE_META = {
+  user:          { avatar: "YOU", cls: "user", name: "你" },
+  TeamLead:      { avatar: "TL",  cls: "teamlead", name: "🧭 Team-lead" },
+  Leader:        { avatar: "LD",  cls: "leader",   name: "📊 Leader(生态总督)" },
+  policy:        { avatar: "PO",  cls: "policy",        name: "📜 改革发展研究员" },
+  socioeconomic: { avatar: "SO",  cls: "socioeconomic", name: "💰 社会经济研究员" },
+  natural:       { avatar: "NA",  cls: "natural",       name: "🌿 生态环境研究员" },
+  urbanization:  { avatar: "UR",  cls: "urbanization",  name: "🏙️ 城镇资规研究员" },
+  System:        { avatar: "⚙",   cls: "system",        name: "系统" },
+};
+
 let sessionId = null;
 let isStreaming = false;
 let currentAbort = null;
 let statusTimer = null;
 
 const messagesEl = document.getElementById('messages');
-const inputEl    = document.getElementById('input');
-const sendBtn    = document.getElementById('sendBtn');
-const stopBtn    = document.getElementById('stopBtn');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const stopBtn = document.getElementById('stopBtn');
 
-// ════════════════════════════════════════════════
-// Markdown 渲染
-// ════════════════════════════════════════════════
+function nowTime() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
 function renderMarkdown(text) {
   if (!text) return '';
   try { return marked.parse(text, { breaks: true, gfm: true }); }
   catch (e) { return text.replace(/</g, '&lt;'); }
 }
 
-// ════════════════════════════════════════════════
-// 图表卡片渲染 —— Claude artifact 风
-// ════════════════════════════════════════════════
 function renderChart(chart) {
   const card = document.createElement('div');
   card.className = 'chart-card';
-
   const header = document.createElement('div');
   header.className = 'chart-card-header';
   const t = document.createElement('span');
-  t.className = 'chart-card-title';
-  t.textContent = chart.title || '图表';
+  t.className = 'chart-card-title'; t.textContent = chart.title || '图表';
   const s = document.createElement('span');
-  s.className = 'chart-card-source';
-  s.textContent = chart.source || '';
+  s.className = 'chart-card-source'; s.textContent = chart.source || '';
   header.appendChild(t); header.appendChild(s);
-
   const img = document.createElement('img');
   img.className = 'chart-card-img';
-  img.src = chart.data;
-  img.alt = chart.title || '';
+  img.src = chart.data; img.alt = chart.title || '';
   img.addEventListener('click', () => openLightbox(chart.data));
-
   const cap = document.createElement('div');
-  cap.className = 'chart-card-caption';
-  cap.textContent = chart.caption || '';
-
-  card.appendChild(header);
-  card.appendChild(img);
-  card.appendChild(cap);
+  cap.className = 'chart-card-caption'; cap.textContent = chart.caption || '';
+  card.appendChild(header); card.appendChild(img); card.appendChild(cap);
   return card;
 }
 
@@ -159,38 +201,43 @@ function openLightbox(src) {
   const box = document.createElement('div');
   box.className = 'img-lightbox';
   const big = document.createElement('img');
-  big.src = src;
-  box.appendChild(big);
+  big.src = src; box.appendChild(big);
   box.addEventListener('click', () => box.remove());
   document.body.appendChild(box);
 }
 
-// ════════════════════════════════════════════════
-// 消息渲染
-// ════════════════════════════════════════════════
 function appendMessage(evt) {
-  // 心跳/空内容不显示
+  // 过滤心跳和内部信号
   if (evt.__heartbeat__) return;
+  if (evt.session_id || evt.error === 'empty') return;
   if (evt.speaker === 'System' && !evt.content && (!evt.charts || evt.charts.length === 0)) return;
-  if (evt.session_id || evt.error === 'empty') return;   // 内部信号
 
+  const meta = ROLE_META[evt.speaker] || { avatar: "??", cls: "", name: evt.label || evt.speaker || "" };
+  const isError = evt.label && (evt.label.includes('🛑') || evt.label.includes('⚠'));
+
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + meta.cls + (isError ? ' system-error' : '');
+
+  // 头像
+  const av = document.createElement('div');
+  av.className = 'avatar ' + meta.cls;
+  av.textContent = meta.avatar;
+  row.appendChild(av);
+
+  // 气泡
   const bubble = document.createElement('div');
-  let cls = 'msg-bubble';
-  if (evt.speaker === 'user')         cls += ' user';
-  else if (evt.speaker === 'TeamLead') cls += ' teamlead';
-  else if (evt.speaker === 'Leader')   cls += ' leader';
-  else if (evt.speaker === 'System') {
-    cls += ' system';
-    if (evt.label && (evt.label.includes('🛑') || evt.label.includes('⚠'))) cls += ' system-error';
-  }
-  bubble.className = cls;
+  bubble.className = 'bubble';
 
-  if (evt.label) {
-    const sp = document.createElement('div');
-    sp.className = 'speaker';
-    sp.textContent = evt.label;
-    bubble.appendChild(sp);
-  }
+  const metaEl = document.createElement('div');
+  metaEl.className = 'meta';
+  const nameEl = document.createElement('span');
+  nameEl.className = 'name';
+  nameEl.textContent = evt.label || meta.name;
+  const timeEl = document.createElement('span');
+  timeEl.className = 'time';
+  timeEl.textContent = nowTime();
+  metaEl.appendChild(nameEl); metaEl.appendChild(timeEl);
+  bubble.appendChild(metaEl);
 
   if (evt.content) {
     const body = document.createElement('div');
@@ -202,59 +249,44 @@ function appendMessage(evt) {
     evt.charts.forEach(c => bubble.appendChild(renderChart(c)));
   }
 
-  messagesEl.appendChild(bubble);
+  row.appendChild(bubble);
+  messagesEl.appendChild(row);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-// ════════════════════════════════════════════════
-// 发送消息 —— 用 fetch+ReadableStream 而非 EventSource
-// (EventSource 不支持 POST,我们后端是 POST)
-// ════════════════════════════════════════════════
 async function sendMessage() {
   const text = inputEl.value.trim();
   if (!text || isStreaming) return;
-
-  // 用户消息先显示
   appendMessage({ speaker: 'user', label: '你', content: text, charts: [] });
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
+  inputEl.value = ''; inputEl.style.height = 'auto';
 
-  setStreaming(true);
-  stopStatusPolling();           // 流式期间停轮询,避免噪音
-
+  setStreaming(true); stopStatusPolling();
   currentAbort = new AbortController();
 
   try {
     const resp = await fetch('/chat/stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, session_id: sessionId || '' }),
       signal: currentAbort.signal,
     });
-
     if (!resp.ok) {
       appendMessage({ speaker: 'System', label: '🛑 系统',
-                      content: `HTTP ${resp.status}: 后端拒绝了请求`, charts: [] });
+                      content: `HTTP ${resp.status}`, charts: [] });
       return;
     }
-
     const reader = resp.body.getReader();
     const decoder = new TextDecoder('utf-8');
     let buf = '';
-
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
       buf += decoder.decode(value, { stream: true });
-
       while (buf.includes('\n\n')) {
         const idx = buf.indexOf('\n\n');
-        const block = buf.slice(0, idx);
-        buf = buf.slice(idx + 2);
-
+        const block = buf.slice(0, idx); buf = buf.slice(idx + 2);
         for (const line of block.split('\n')) {
           const ln = line.trim();
-          if (!ln || ln.startsWith(':')) continue;     // 心跳注释
+          if (!ln || ln.startsWith(':')) continue;
           if (!ln.startsWith('data:')) continue;
           const payload = ln.slice(5).trim();
           if (payload === '[DONE]') return;
@@ -262,38 +294,28 @@ async function sendMessage() {
             const evt = JSON.parse(payload);
             if (evt.session_id) sessionId = evt.session_id;
             appendMessage(evt);
-          } catch (e) {
-            console.warn('SSE parse fail:', e, payload);
-          }
+          } catch (e) { console.warn('SSE parse:', e); }
         }
       }
     }
   } catch (e) {
     if (e.name === 'AbortError') {
-      appendMessage({ speaker: 'System', label: '⚙️ 系统',
-                      content: '已取消请求。', charts: [] });
+      appendMessage({ speaker: 'System', label: '⚙️ 系统', content: '已取消请求。', charts: [] });
     } else {
       appendMessage({ speaker: 'System', label: '🛑 系统',
                       content: `网络错误: ${e.message}`, charts: [] });
     }
   } finally {
-    setStreaming(false);
-    currentAbort = null;
-    startStatusPolling();
+    setStreaming(false); currentAbort = null; startStatusPolling();
   }
 }
 
 async function stopTask() {
   if (!isStreaming) return;
-  // 1) 通知后端 stop(柔性中止,让 Leader 走完当前步骤)
   try {
-    await fetch('/stop', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: '', session_id: sessionId || '' }),
-    });
-  } catch (e) { /* 忽略 */ }
-  // 2) 同时硬中止本端 fetch 流(避免继续读)
+    await fetch('/stop', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: '', session_id: sessionId || '' }) });
+  } catch (e) {}
   if (currentAbort) currentAbort.abort();
 }
 
@@ -304,67 +326,50 @@ function setStreaming(on) {
   stopBtn.style.display = on ? 'inline-block' : 'none';
 }
 
-// ════════════════════════════════════════════════
-// 输入框:Enter 发送,Shift+Enter 换行,自动高度
-// ════════════════════════════════════════════════
 inputEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
 inputEl.addEventListener('input', () => {
   inputEl.style.height = 'auto';
   inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
 });
 
-// ════════════════════════════════════════════════
-// /status 轮询 —— ★ 节流到 15 秒
-// 流式期间停止,避免和长任务抢资源造成 "network error"
-// ════════════════════════════════════════════════
+// /status 轮询 15s,流式期间停
 async function fetchStatus() {
   try {
     const r = await fetch('/status');
     if (!r.ok) return;
     const s = await r.json();
-    updateStatusUI(s);
-  } catch (e) {
-    // 静默忽略,避免污染界面
-  }
+    const map = {
+      'dot-tl': s['team-leader']?.online,
+      'dot-ld': s['leader']?.online,
+      'dot-policy': s['policy']?.online,
+      'dot-socioeconomic': s['socioeconomic']?.online,
+      'dot-natural': s['natural']?.online,
+      'dot-urbanization': s['urbanization']?.online,
+    };
+    for (const [id, ok] of Object.entries(map)) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      el.classList.remove('online', 'offline');
+      if (ok === true) el.classList.add('online');
+      else if (ok === false) el.classList.add('offline');
+    }
+  } catch (e) {}
 }
-
-function updateStatusUI(s) {
-  const map = {
-    'dot-tl':            s['team-leader']?.online,
-    'dot-ld':            s['leader']?.online,
-    'dot-policy':        s['policy']?.online,
-    'dot-socioeconomic': s['socioeconomic']?.online,
-    'dot-natural':       s['natural']?.online,
-    'dot-urbanization':  s['urbanization']?.online,
-  };
-  for (const [id, ok] of Object.entries(map)) {
-    const el = document.getElementById(id);
-    if (!el) continue;
-    el.classList.remove('online', 'offline');
-    if (ok === true) el.classList.add('online');
-    else if (ok === false) el.classList.add('offline');
-  }
-}
-
 function startStatusPolling() {
   if (statusTimer) return;
-  fetchStatus();                                    // 立即跑一次
-  statusTimer = setInterval(fetchStatus, 15000);    // ★ 15s 一次
+  fetchStatus();
+  statusTimer = setInterval(fetchStatus, 15000);
 }
 function stopStatusPolling() {
   if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
 }
 
-// 启动
 startStatusPolling();
 appendMessage({
   speaker: 'TeamLead', label: '🧭 Team-lead',
-  content: '你好,我是团队协调员。可以让我:\n\n- **简单聊天** —— 比如「你好」\n- **介绍团队** —— 比如「团队有哪些成员」\n- **综合研究** —— 比如「分析海南未来 5 年耕地撂荒趋势,并画趋势预测图」',
+  content: '你好,我是团队协调员。试试:\n\n- **聊天** —— "你好"\n- **介绍团队** —— "团队有哪些成员"\n- **综合研究** —— "分析海南未来 5 年耕地撂荒趋势,并画趋势预测图"',
   charts: []
 });
 </script>
