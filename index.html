@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>海南生态预测团队 · Team Console</title>
+<title>海南生态研究团队 · Team Console</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 :root {
@@ -53,6 +53,31 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.55;transform:scale(.85)} }
 .legend { padding: 12px 22px 18px; border-top: 1px solid var(--border); display: flex; gap: 14px; font-size: 11px; color: var(--text-tertiary); }
 .legend-item { display: flex; align-items: center; gap: 5px; }
+
+.msg-bubble:empty { display: none; }   /* 修复: panel-only 消息不再多出一条空缝 */
+
+/* 历史对话面板(可折叠) */
+.history-panel { border-top: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; transition: max-height 0.28s ease; }
+.history-header { display: flex; align-items: center; gap: 8px; padding: 12px 18px; cursor: pointer; user-select: none; transition: background 0.15s; }
+.history-header:hover { background: var(--bg-card); }
+.history-header .hh-icon { width: 15px; height: 15px; color: var(--text-tertiary); transition: transform 0.25s ease; flex-shrink: 0; }
+.history-panel.collapsed .history-header .hh-icon { transform: rotate(-90deg); }
+.history-header .hh-title { font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 600; flex: 1; }
+.history-header .hh-count { font-size: 10.5px; color: var(--text-tertiary); background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px; }
+.history-list { list-style: none; margin: 0; padding: 0 10px 12px; overflow-y: auto; max-height: 40vh; transition: max-height 0.28s ease, padding 0.28s ease, opacity 0.2s ease; }
+.history-panel.collapsed .history-list { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; }
+.history-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: var(--radius); cursor: pointer; transition: background 0.13s; margin-bottom: 2px; }
+.history-item:hover { background: var(--bg-card); }
+.history-item.active { background: rgba(26,92,200,0.10); border: 1px solid rgba(26,92,200,0.22); }
+.history-item .hi-body { flex: 1; min-width: 0; }
+.history-item .hi-title { font-size: 12.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-item .hi-meta { font-size: 10.5px; color: var(--text-tertiary); margin-top: 1px; }
+.history-item .hi-del { opacity: 0; width: 22px; height: 22px; border-radius: 6px; border: 0; background: transparent; color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.13s, background 0.13s, color 0.13s; }
+.history-item:hover .hi-del { opacity: 1; }
+.history-item .hi-del:hover { background: rgba(180,30,30,0.10); color: #9a2020; }
+.history-empty { padding: 10px 12px; font-size: 12px; color: var(--text-tertiary); text-align: center; }
+.history-loading { padding: 10px 12px; font-size: 12px; color: var(--text-tertiary); text-align: center; }
+
 .main { display: flex; flex-direction: column; background: var(--bg-main); overflow: hidden; }
 .topbar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 14px; background: var(--bg-main); flex-shrink: 0; position: relative; }
 .topbar::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:2px; background: linear-gradient(90deg, var(--accent) 0%, transparent 60%); opacity:0.18; }
@@ -118,12 +143,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .img-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
 .img-lightbox img { max-width: 92%; max-height: 92%; }
 
-.msg-refs { margin-top: 8px; padding: 10px 14px; background: rgba(26,92,200,0.04); border: 1px solid var(--border); border-radius: var(--radius); font-size: 12.5px; line-height: 1.9; }
-.msg-refs-title { font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; margin-bottom: 6px; }
-.msg-refs-item { display: flex; gap: 8px; align-items: baseline; margin-bottom: 2px; }
+.msg-refs { margin-top: 10px; padding: 12px 16px; background: rgba(26,92,200,0.04); border: 1px solid var(--border); border-radius: var(--radius); font-size: 12.5px; line-height: 1.9; }
+.msg-refs-title { font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 500; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.msg-refs-item { display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; }
+.msg-refs-item:last-child { margin-bottom: 0; }
 .msg-refs-num { color: var(--text-tertiary); font-size: 11px; flex-shrink: 0; min-width: 18px; }
 .msg-refs-body { flex: 1; word-break: break-all; color: var(--text-secondary); }
-.msg-refs-body a { color: var(--accent); text-decoration: none; }
+.msg-refs-label { color: var(--text-secondary); }
+.msg-refs-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 10.5px; border-radius: 4px; background: rgba(96,125,154,0.12); color: var(--text-tertiary); vertical-align: 1px; }
+.msg-refs-body a { color: var(--accent); text-decoration: none; word-break: break-all; }
 .msg-refs-body a:hover { color: var(--accent-dim); text-decoration: underline; }
 
 .typing-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); margin: 0 1.5px; animation: bounce 1.2s infinite ease-in-out both; }
@@ -143,6 +171,32 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
 .send-btn svg { width: 16px; height: 16px; }
 .input-hint { max-width: 920px; margin: 8px auto 0; font-size: 11px; color: var(--text-tertiary); text-align: center; }
 ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(26,92,200,0.12); border-radius: 4px; }
+
+/* 原始数据面板(表格 / 折线图) */
+.panel-card { margin: 12px 0 6px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-card); box-shadow: 0 1px 3px rgba(26,92,200,0.04); }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); font-size: 12.5px; flex-wrap: wrap; }
+.panel-head-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.panel-title { font-weight: 600; color: var(--text-primary); }
+.panel-sub { color: var(--text-tertiary); font-size: 11px; }
+.panel-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 7px; overflow: hidden; flex-shrink: 0; }
+.panel-toggle button { border: 0; background: var(--bg-card); color: var(--text-secondary); font-size: 11.5px; padding: 4px 12px; cursor: pointer; font-family: inherit; }
+.panel-toggle button + button { border-left: 1px solid var(--border); }
+.panel-toggle button.active { background: var(--accent-dim); color: #fff; }
+.panel-tablewrap { max-height: 340px; overflow: auto; }
+.panel-table { border-collapse: separate; border-spacing: 0; font-size: 12.5px; width: max-content; min-width: 100%; }
+.panel-table th, .panel-table td { padding: 6px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; text-align: right; }
+.panel-table thead th { position: sticky; top: 0; z-index: 2; background: var(--bg-input); font-weight: 600; color: var(--text-primary); }
+.panel-table thead th:first-child, .panel-table tbody th { text-align: left; }
+.panel-table th:first-child, .panel-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-card); font-weight: 500; color: var(--text-primary); border-right: 1px solid var(--border-strong); }
+.panel-table thead th:first-child { z-index: 3; background: var(--bg-input); }
+.panel-table tbody tr:nth-child(even) td { background: rgba(26,92,200,0.025); }
+.panel-table tbody tr:nth-child(even) th:first-child, .panel-table tbody tr:nth-child(even) td:first-child { background: #f3f7fc; }
+.panel-table td.empty { color: var(--text-tertiary); }
+.panel-chartwrap { padding: 12px 14px 6px; overflow-x: auto; }
+.panel-chartwrap svg { display: block; max-width: 100%; height: auto; }
+.panel-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 4px 14px 12px; font-size: 11px; color: var(--text-secondary); }
+.panel-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.panel-legend-swatch { width: 12px; height: 3px; border-radius: 2px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -151,18 +205,28 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
     <div class="brand">
       <div class="brand-row">
         <div class="brand-logo">海</div>
-        <div><div class="brand-title">海南生态预测团队</div><div class="brand-sub">ECO TEAM CONSOLE</div></div>
+        <div><div class="brand-title">海南生态研究团队</div><div class="brand-sub">ECO RESEARCH CONSOLE</div></div>
       </div>
     </div>
     <div class="section-label">Team Members</div>
     <div class="member-list">
-      <div class="member"><div class="member-avatar av-tl">TL</div><div class="member-text"><div class="member-name">🧭 Team-lead</div><div class="member-role">总协调人</div></div><div class="dot off" id="dot-team-leader"></div></div>
-      <div class="member"><div class="member-avatar av-ld">LD</div><div class="member-text"><div class="member-name">📊 Leader(生态总督)</div><div class="member-role">调度 · 评估 · 汇总</div></div><div class="dot off" id="dot-leader"></div></div>
-      <div class="member"><div class="member-avatar av-po">PO</div><div class="member-text"><div class="member-name">📜 改革发展研究员</div><div class="member-role">耕地红线 · 国土规划 · 政策</div></div><div class="dot off" id="dot-policy"></div></div>
-      <div class="member"><div class="member-avatar av-so">SO</div><div class="member-text"><div class="member-name">💰 社会经济研究员</div><div class="member-role">作物价格 · 农民收入 · 撂荒</div></div><div class="dot off" id="dot-socioeconomic"></div></div>
-      <div class="member"><div class="member-avatar av-na">NA</div><div class="member-text"><div class="member-name">🌿 生态环境研究员</div><div class="member-role">台风 · 气候 · 热带雨林</div></div><div class="dot off" id="dot-natural"></div></div>
-      <div class="member"><div class="member-avatar av-ur">UR</div><div class="member-text"><div class="member-name">🏙️ 城镇资规研究员</div><div class="member-role">城镇化 · 建设用地 · 自贸港</div></div><div class="dot off" id="dot-urbanization"></div></div>
+      <div class="member"><div class="member-avatar av-ld">LD</div><div class="member-text"><div class="member-name">📊 Leader(生态总督)</div><div class="member-role">主持讨论 · 综合判断</div></div><div class="dot off" id="dot-leader"></div></div>
+      <div class="member"><div class="member-avatar av-po">PO</div><div class="member-text"><div class="member-name">📜 改革发展研究员</div><div class="member-role">土地制度 · 国土规划 · 政策</div></div><div class="dot off" id="dot-policy"></div></div>
+      <div class="member"><div class="member-avatar av-so">SO</div><div class="member-text"><div class="member-name">💰 社会经济研究员</div><div class="member-role">人口经济 · 弹性回归 · 统计</div></div><div class="dot off" id="dot-socioeconomic"></div></div>
+      <div class="member"><div class="member-avatar av-na">NA</div><div class="member-text"><div class="member-name">🌿 生态环境研究员</div><div class="member-role">气候 · 生态系统 · 碳循环</div></div><div class="dot off" id="dot-natural"></div></div>
+      <div class="member"><div class="member-avatar av-ur">UR</div><div class="member-text"><div class="member-name">🏙️ 城镇资规研究员</div><div class="member-role">建设用地 · 城镇化 · 空间规划</div></div><div class="dot off" id="dot-urbanization"></div></div>
     </div>
+    <div class="history-panel" id="history-panel">
+      <div class="history-header" onclick="toggleHistory()">
+        <svg class="hh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <span class="hh-title">历史对话</span>
+        <span class="hh-count" id="history-count">0</span>
+      </div>
+      <ul class="history-list" id="history-list">
+        <li class="history-empty">暂无历史对话</li>
+      </ul>
+    </div>
+
     <div class="legend">
       <div class="legend-item"><span class="dot on"></span>在线</div>
       <div class="legend-item"><span class="dot busy"></span>工作中</div>
@@ -173,8 +237,8 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
   <main class="main">
     <div class="topbar">
       <div>
-        <div class="topbar-title">AutoGen 群聊控制台</div>
-        <div class="topbar-meta">Leader 调度 · 多轮群聊讨论</div>
+        <div class="topbar-title">多 Agent 研究控制台</div>
+        <div class="topbar-meta">Leader 调度 · 多轮群聊讨论 · 自适应任务类型</div>
       </div>
       <div class="spacer"></div>
       <span class="session-badge" id="sess-badge">无会话</span>
@@ -190,13 +254,13 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
     <div class="chat-scroll" id="chat-scroll">
       <div class="chat-inner" id="chat-inner">
         <div class="empty-state" id="empty-state">
-          <h2>欢迎使用海南生态预测团队</h2>
-          <p>团队成员已就位。提出研究任务后,Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
+          <h2>欢迎使用海南生态研究团队</h2>
+          <p>团队成员已就位。你可以提出预测、验证、诊断、对比或探索类研究问题，Leader 会判断任务类型并调度专家分头研究。</p>
           <div class="suggestions">
             <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
-            <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势,并画趋势预测图</button>
-            <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
-            <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
+            <button class="suggestion" onclick="quickSend(this)">海南 2000-2020 年各市县建设用地与人口的弹性关系是什么</button>
+            <button class="suggestion" onclick="quickSend(this)">分析海南近 10 年极端降水频率变化</button>
+            <button class="suggestion" onclick="quickSend(this)">对比海南东西部市县的城镇化路径差异</button>
           </div>
         </div>
       </div>
@@ -217,17 +281,11 @@ textarea.busy-warn::placeholder { color: #c07000; animation: flash 0.6s ease-in-
 <script>
 'use strict';
 
-// ════════════════════════════════════════════════════════════════
-// ★ 关键:API 地址。同源(用 http://localhost:9000/ 打开)直接 origin
-// 若必须跨源(如 GitHub Pages),把下面改成稳定的后端公网地址,例如:
-//   const API = 'https://your-stable-tunnel.com';
-// ════════════════════════════════════════════════════════════════
 const API = window.location.origin;
 
 let sid = '', busy = false, statusTimer = null, currentAbort = null;
 
 const SPEAKER_INFO = {
-  TeamLead:      { tag:'TL', cls:'tl', avCls:'av-tl', label:'🧭 Team-lead' },
   Leader:        { tag:'LD', cls:'ld', avCls:'av-ld', label:'📊 Leader(生态总督)' },
   policy:        { tag:'PO', cls:'po', avCls:'av-po', label:'📜 改革发展研究员' },
   socioeconomic: { tag:'SO', cls:'so', avCls:'av-so', label:'💰 社会经济研究员' },
@@ -235,38 +293,138 @@ const SPEAKER_INFO = {
   urbanization:  { tag:'UR', cls:'ur', avCls:'av-ur', label:'🏙️ 城镇资规研究员' },
   System:        { tag:'⚙', cls:'sys', avCls:'av-sys', label:'系统', isSystem:true },
 };
-const STATUS_KEYS = ['team-leader','leader','policy','socioeconomic','natural','urbanization'];
+const STATUS_KEYS = ['leader','policy','socioeconomic','natural','urbanization'];
 
 function fmtTime(){ return new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}); }
 function clearEmptyState(){ const e=document.getElementById('empty-state'); if(e) e.remove(); }
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function renderMarkdown(text){ if(!text) return ''; try{ return marked.parse(text,{breaks:true,gfm:true}); } catch(e){ return escHtml(text); } }
+
+/**
+ * host 现在按 parts 协议把研究员输出分发过来，content 字段已是干净的报告正文，
+ * 不再需要在前端做 JSON 信封解析。此函数仅做恒等返回，保留作为防御层。
+ */
+function extractReportFromContent(content) {
+  return (content && typeof content === 'string') ? content : (content || '');
+}
+function renderMarkdown(text){
+  if(!text) return '';
+  try{
+    if (typeof marked !== 'undefined' && marked && typeof marked.parse === 'function') {
+      return marked.parse(text, { breaks:true, gfm:true });
+    }
+  } catch(e){}
+  return mdFallback(text);
+}
+
+function mdFallback(src){
+  const escB = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const inline = s => escB(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+?)__/g, '<strong>$1</strong>')
+    .replace(/\*([^*\n]+?)\*/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const rows = String(src).replace(/\r\n?/g,'\n').split('\n');
+  const out = [];
+  let i = 0, inCode = false, codeBuf = [], listType = null, listBuf = [];
+  const closeList = () => {
+    if (listType){ out.push('<'+listType+'>'+listBuf.join('')+'</'+listType+'>'); listType=null; listBuf=[]; }
+  };
+  while (i < rows.length){
+    const line = rows[i];
+    if (/^\s*```/.test(line)){
+      if (!inCode){ closeList(); inCode=true; codeBuf=[]; }
+      else { out.push('<pre><code>'+codeBuf.map(escB).join('\n')+'</code></pre>'); inCode=false; }
+      i++; continue;
+    }
+    if (inCode){ codeBuf.push(line); i++; continue; }
+    if (/^\s*\|.*\|\s*$/.test(line) && i+1 < rows.length &&
+        /^\s*\|?[\s:|-]+\|?\s*$/.test(rows[i+1]) && rows[i+1].includes('-')){
+      closeList();
+      const cut = r => r.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>c.trim());
+      const head = cut(line); i += 2;
+      let t = '<table><thead><tr>'+head.map(h=>'<th>'+inline(h)+'</th>').join('')+'</tr></thead><tbody>';
+      while (i < rows.length && /^\s*\|.*\|\s*$/.test(rows[i])){
+        t += '<tr>'+cut(rows[i]).map(c=>'<td>'+inline(c)+'</td>').join('')+'</tr>'; i++;
+      }
+      out.push(t+'</tbody></table>'); continue;
+    }
+    let m;
+    if ((m = line.match(/^\s*(#{1,6})\s+(.*)$/))){ closeList(); const lv=m[1].length; out.push('<h'+lv+'>'+inline(m[2])+'</h'+lv+'>'); i++; continue; }
+    if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)){ closeList(); out.push('<hr>'); i++; continue; }
+    if ((m = line.match(/^\s*>\s?(.*)$/))){ closeList(); out.push('<blockquote>'+inline(m[1])+'</blockquote>'); i++; continue; }
+    if ((m = line.match(/^\s*[-*\u2022]\s+(.*)$/))){ if(listType!=='ul'){ closeList(); listType='ul'; } listBuf.push('<li>'+inline(m[1])+'</li>'); i++; continue; }
+    if ((m = line.match(/^\s*\d+[.)、]\s+(.*)$/))){ if(listType!=='ol'){ closeList(); listType='ol'; } listBuf.push('<li>'+inline(m[1])+'</li>'); i++; continue; }
+    if (/^\s*$/.test(line)){ closeList(); i++; continue; }
+    closeList(); out.push('<p>'+inline(line)+'</p>'); i++;
+  }
+  if (inCode) out.push('<pre><code>'+codeBuf.map(escB).join('\n')+'</code></pre>');
+  closeList();
+  return out.join('\n');
+}
+
+function parseReferenceItems(items){
+  if (!Array.isArray(items)) return [];
+  const out = [];
+  items.forEach((raw, idx) => {
+    const line = String(raw || '').trim();
+    if (!line) return;
+    const cleaned = line
+      .replace(/^\s*(?:\d+[\.\)、]\s*|[•\-\*《]\s*)/, '')
+      .replace(/》\s*$/, '')
+      .trim();
+    if (!cleaned) return;
+    const pipeIdx = cleaned.search(/\s*\|\s*/);
+    let label = cleaned, tail = '', url = '', isLocal = false;
+    if (pipeIdx !== -1) {
+      label = cleaned.slice(0, pipeIdx).trim();
+      tail = cleaned.slice(pipeIdx).replace(/^\s*\|\s*/, '').trim();
+      if (/^https?:\/\//i.test(tail)) {
+        url = tail;
+      } else if (/本地知识库|本地资料|local/i.test(tail)) {
+        isLocal = true;
+      } else {
+        label = cleaned;
+      }
+    }
+    out.push({ num: idx + 1, label, url, isLocal });
+  });
+  return out;
+}
+
+function buildRefsHTMLFromArray(items){
+  const parsed = parseReferenceItems(items);
+  if (parsed.length === 0) return '';
+  const lis = parsed.map(r => {
+    let bodyHtml = `<span class="msg-refs-label">${escHtml(r.label)}</span>`;
+    if (r.url) {
+      bodyHtml += `<br><a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a>`;
+    } else if (r.isLocal) {
+      bodyHtml += `<span class="msg-refs-tag">本地知识库</span>`;
+    }
+    return `<div class="msg-refs-item"><span class="msg-refs-num">${r.num}.</span><span class="msg-refs-body">${bodyHtml}</span></div>`;
+  }).join('');
+  return `<div class="msg-refs"><div class="msg-refs-title">📎 参考资料</div>${lis}</div>`;
+}
 
 function splitReply(content){
-  const sepIdx = content.search(/\n---+\s*\n/);
+  // 兼容两种格式: 旧版水平线分隔符 和 新版参考资料标题行
+  const hrIdx  = content.search(/\n---+\s*\n/);
+  const refIdx = content.search(/\n📎\s*参考资料|\n参考资料|\n参考文献|\nreferences/i);
+  const sepIdx = hrIdx >= 0 && refIdx >= 0 ? Math.min(hrIdx, refIdx)
+               : hrIdx  >= 0 ? hrIdx
+               : refIdx >= 0 ? refIdx
+               : -1;
   if (sepIdx === -1) return { body: content.trim(), refs: [] };
-  const body = content.slice(0, sepIdx).trim();
+  const body    = content.slice(0, sepIdx).trim();
   const refText = content.slice(sepIdx).replace(/\n---+\s*\n/, '').trim();
-  const lines = refText.split('\n').map(l=>l.trim()).filter(l=>l && !/^📎/.test(l) && !/^参考资料/.test(l));
-  const refs = lines.map(line => {
-    const m = line.match(/^(\d+)\.\s*(.+)$/);
-    if (!m) return null;
-    const rest = m[2], pipeIdx = rest.indexOf(' | ');
-    if (pipeIdx !== -1) {
-      const label = rest.slice(0,pipeIdx).trim(), url = rest.slice(pipeIdx+3).trim();
-      return { num: m[1], label, url: url.startsWith('http') ? url : '' };
-    }
-    return { num: m[1], label: rest.trim(), url: '' };
-  }).filter(Boolean);
-  return { body, refs };
-}
-function buildRefsHTML(refs){
-  if (!refs || refs.length === 0) return '';
-  const items = refs.map(r => {
-    const linkPart = r.url ? `<br><a href="${escHtml(r.url)}" target="_blank" rel="noopener">${escHtml(r.url)}</a>` : '';
-    return `<div class="msg-refs-item"><span class="msg-refs-num">${escHtml(r.num)}.</span><span class="msg-refs-body">${escHtml(r.label)}${linkPart}</span></div>`;
-  }).join('');
-  return `<div class="msg-refs"><div class="msg-refs-title">📎 参考资料</div>${items}</div>`;
+  const lines   = refText.split('\n')
+    .map(l => l.trim())
+    .filter(l => l
+      && !/^📎/.test(l)
+      && !/^参考资料|^参考文献|^references/i.test(l)
+      && (l.startsWith('- ') || l.startsWith('• ') || /^\d+[.)、]/.test(l)));
+  return { body, refs: lines };
 }
 
 function renderChart(chart){
@@ -275,11 +433,27 @@ function renderChart(chart){
   const t = document.createElement('span'); t.className = 'chart-card-title'; t.textContent = chart.title || '图表';
   const s = document.createElement('span'); s.className = 'chart-card-source'; s.textContent = chart.source || '';
   header.appendChild(t); header.appendChild(s);
-  const img = document.createElement('img'); img.className = 'chart-card-img';
-  img.src = chart.data; img.alt = chart.title || '';
-  img.addEventListener('click', () => openLightbox(chart.data));
+  // 图片来源优先级: 实时的 base64 data > 历史归档的 chart_url (session.json 不存 base64, 靠 URL)
+  const imgSrc = chart.data || chart.chart_url || '';
+  if (imgSrc) {
+    const img = document.createElement('img'); img.className = 'chart-card-img';
+    img.src = imgSrc; img.alt = chart.title || '';
+    img.addEventListener('click', () => openLightbox(imgSrc));
+    card.appendChild(header); card.appendChild(img);
+  } else {
+    // 既没有 data 也没有 chart_url -> 老历史消息, 显示占位提示
+    card.appendChild(header);
+    const ph = document.createElement('div');
+    ph.style.cssText = 'padding:24px;text-align:center;color:var(--text-tertiary);font-size:12.5px;';
+    ph.textContent = '📁 图片已归档 (来自旧版存档, 无法显示)';
+    card.appendChild(ph);
+  }
   const cap = document.createElement('div'); cap.className = 'chart-card-caption'; cap.textContent = chart.caption || '';
-  card.appendChild(header); card.appendChild(img); card.appendChild(cap);
+  card.appendChild(cap);
+  // 图表数据表格(与 PNG 同生, AI 出图时一并写出 JSON)
+  if (chart.chart_table_data && Array.isArray(chart.chart_table_data.rows) && chart.chart_table_data.rows.length > 0) {
+    card.appendChild(renderPanelData(chart.chart_table_data));
+  }
   return card;
 }
 function openLightbox(src){
@@ -287,6 +461,365 @@ function openLightbox(src){
   const big = document.createElement('img'); big.src = src; box.appendChild(big);
   box.addEventListener('click', () => box.remove());
   document.body.appendChild(box);
+}
+
+// ── 原始数据面板:表格 + 折线图 ─────────────────────────────────
+// 后端 host 把每个研究员的 panel(对象 × 时点 × 数值)整理成 panel_data 结构下发,
+// 前端在这里渲染成最普通的可交互表格(行=对象、列=时点、格=数值),并可切换折线图。
+// 不依赖 Leader 出图 —— 这是研究员搜集上来的原始数据本身的展示。
+function fmtCell(v){
+  if (v === null || v === undefined || v === '') return '';
+  if (typeof v === 'number') {
+    if (Number.isInteger(v)) return String(v);
+    return String(Math.round(v * 1e6) / 1e6);
+  }
+  const n = Number(v);
+  if (!isNaN(n) && String(v).trim() !== '') {
+    if (Number.isInteger(n)) return String(n);
+    return String(Math.round(n * 1e6) / 1e6);
+  }
+  return String(v);
+}
+
+function buildPanelTable(pd){
+  const periods = pd.periods || [];
+  const rows = pd.rows || [];
+  const wrap = document.createElement('div'); wrap.className = 'panel-tablewrap';
+  const table = document.createElement('table'); table.className = 'panel-table';
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  const corner = document.createElement('th'); corner.textContent = pd.object_label || '对象';
+  htr.appendChild(corner);
+  periods.forEach(p => { const th = document.createElement('th'); th.textContent = p; htr.appendChild(th); });
+  thead.appendChild(htr); table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    const th = document.createElement('th'); th.textContent = row.name; tr.appendChild(th);
+    const cells = row.cells || {};
+    periods.forEach(p => {
+      const td = document.createElement('td');
+      if (Object.prototype.hasOwnProperty.call(cells, p) && cells[p] !== null && cells[p] !== '') {
+        td.textContent = fmtCell(cells[p]);
+      } else {
+        td.textContent = '·'; td.className = 'empty';
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody); wrap.appendChild(table);
+  return wrap;
+}
+
+function buildPanelChart(pd){
+  const NS = 'http://www.w3.org/2000/svg';
+  const periods = pd.periods || [];
+  const rows = pd.rows || [];
+  const xIndex = {}; periods.forEach((p, i) => { xIndex[p] = i; });
+  let vmin = Infinity, vmax = -Infinity, any = false;
+  const seriesList = rows.map(row => {
+    const pts = [];
+    const cells = row.cells || {};
+    periods.forEach(p => {
+      const raw = cells[p];
+      const num = (typeof raw === 'number') ? raw : parseFloat(raw);
+      if (raw !== undefined && raw !== null && raw !== '' && !isNaN(num)) {
+        pts.push([xIndex[p], num]); any = true;
+        if (num < vmin) vmin = num;
+        if (num > vmax) vmax = num;
+      }
+    });
+    return { name: row.name, pts };
+  }).filter(s => s.pts.length > 0);
+
+  const outer = document.createElement('div');
+  if (!any || periods.length === 0) {
+    const cw = document.createElement('div'); cw.className = 'panel-chartwrap';
+    cw.textContent = '无可绘制的数值。';
+    outer.appendChild(cw);
+    return outer;
+  }
+  if (vmin === vmax) { vmin -= 1; vmax += 1; }
+
+  const W = Math.max(520, 90 + periods.length * 70), H = 300;
+  const padL = 60, padR = 18, padT = 16, padB = 40;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const nx = Math.max(periods.length - 1, 1);
+  const sx = i => padL + plotW * (i / nx);
+  const sy = v => padT + plotH - plotH * (v - vmin) / (vmax - vmin);
+  const COLORS = ['#1a5cc8','#1e7a4a','#b35c00','#6236c0','#0f7c9e','#c0392b',
+                  '#0d6688','#8a6d00','#a03050','#2a7a2a','#555fbf','#c05a00'];
+
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', String(W));
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  for (let g = 0; g <= 4; g++) {
+    const val = vmin + (vmax - vmin) * g / 4;
+    const yy = sy(val);
+    const ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', padL); ln.setAttribute('x2', W - padR);
+    ln.setAttribute('y1', yy); ln.setAttribute('y2', yy);
+    ln.setAttribute('stroke', '#e2e9f3'); ln.setAttribute('stroke-width', '1');
+    svg.appendChild(ln);
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', padL - 8); tx.setAttribute('y', yy + 3);
+    tx.setAttribute('text-anchor', 'end'); tx.setAttribute('font-size', '10'); tx.setAttribute('fill', '#8aaad0');
+    tx.textContent = (Math.abs(val) >= 1000) ? String(Math.round(val)) : String(Math.round(val * 100) / 100);
+    svg.appendChild(tx);
+  }
+  periods.forEach((p, i) => {
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', sx(i)); tx.setAttribute('y', H - padB + 16);
+    tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('font-size', '10'); tx.setAttribute('fill', '#8aaad0');
+    tx.textContent = p;
+    svg.appendChild(tx);
+  });
+  seriesList.forEach((s, si) => {
+    const color = COLORS[si % COLORS.length];
+    const d = s.pts.map((pt, k) => (k === 0 ? 'M' : 'L') + sx(pt[0]) + ' ' + sy(pt[1])).join(' ');
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', d); path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', color); path.setAttribute('stroke-width', '1.8');
+    path.setAttribute('stroke-linejoin', 'round'); path.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(path);
+    s.pts.forEach(pt => {
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', sx(pt[0])); c.setAttribute('cy', sy(pt[1])); c.setAttribute('r', '2.4');
+      c.setAttribute('fill', color);
+      svg.appendChild(c);
+    });
+  });
+
+  const cw = document.createElement('div'); cw.className = 'panel-chartwrap'; cw.appendChild(svg);
+  const legend = document.createElement('div'); legend.className = 'panel-legend';
+  seriesList.forEach((s, si) => {
+    const item = document.createElement('span'); item.className = 'panel-legend-item';
+    const sw = document.createElement('span'); sw.className = 'panel-legend-swatch';
+    sw.style.background = COLORS[si % COLORS.length];
+    item.appendChild(sw);
+    const nm = document.createElement('span'); nm.textContent = s.name;
+    item.appendChild(nm);
+    legend.appendChild(item);
+  });
+  outer.appendChild(cw); outer.appendChild(legend);
+  return outer;
+}
+
+// ── 柱状图 ──────────────────────────────────────────────────────────────
+// 自动选择布局策略：
+//   · 时点数 ≤ 1 或 对象数 ≥ 时点数*2 → 横向分组柱（对象为组，时点为颜色）
+//   · 否则 → 纵向分组柱（时点为组，对象为颜色）
+// 两种布局共用同一套颜色表和图例渲染逻辑。
+function buildPanelBarChart(pd){
+  const NS = 'http://www.w3.org/2000/svg';
+  const periods = pd.periods || [];
+  const rows = (pd.rows || []).filter(r => {
+    const cells = r.cells || {};
+    return periods.some(p => {
+      const v = cells[p];
+      return v !== undefined && v !== null && v !== '' && !isNaN(parseFloat(v));
+    });
+  });
+
+  const outer = document.createElement('div');
+  if (rows.length === 0 || periods.length === 0) {
+    const cw = document.createElement('div'); cw.className = 'panel-chartwrap';
+    cw.textContent = '无可绘制的数值。'; outer.appendChild(cw); return outer;
+  }
+
+  const COLORS = ['#1a5cc8','#1e7a4a','#b35c00','#6236c0','#0f7c9e','#c0392b',
+                  '#0d6688','#8a6d00','#a03050','#2a7a2a','#555fbf','#c05a00'];
+
+  // ── 收集所有有效数值 ──────────────────────────────────────────────
+  // data[rowIdx][periodIdx] = number | null
+  const data = rows.map(row =>
+    periods.map(p => {
+      const v = (row.cells || {})[p];
+      const n = (typeof v === 'number') ? v : parseFloat(v);
+      return (v !== undefined && v !== null && v !== '' && !isNaN(n)) ? n : null;
+    })
+  );
+  const allVals = data.flat().filter(v => v !== null);
+  let vmin = Math.min(...allVals), vmax = Math.max(...allVals);
+  // baseline 始终为 0：正数柱从 0 往上，负数柱从 0 往下，混合值两侧都有
+  const baseline = 0;
+  vmin = Math.min(0, vmin);   // 确保 0 在可视范围内
+  vmax = Math.max(0, vmax);
+  if (vmin === vmax) { vmin -= 1; vmax += 1; }
+
+  // ── 布局决策 ──────────────────────────────────────────────────────
+  // 对象数多、时点数少 → 时点分颜色（每组=一个对象，每色=一个时点）
+  // 时点数多 → 对象分颜色（每组=一个时点，每色=一个对象）
+  const byObject = (rows.length >= periods.length) || (periods.length <= 2);
+
+  // groups: 横轴上的组；series: 每组内的条目（不同颜色的柱）
+  const groups   = byObject ? rows.map(r => r.name)    : periods;
+  const seriesLbls = byObject ? periods               : rows.map(r => r.name);
+  // getValue(groupIdx, seriesIdx) → number | null
+  const getValue = byObject
+    ? (gi, si) => data[gi][si]
+    : (gi, si) => data[si][gi];
+
+  const nGroups  = groups.length;
+  const nSeries  = seriesLbls.length;
+  const barW     = Math.max(8, Math.min(32, Math.floor(360 / (nGroups * nSeries + nGroups))));
+  const groupGap = Math.max(6, barW * 0.6);
+  const groupW   = barW * nSeries + groupGap;
+  const padL = 62, padR = 20, padT = 20, padB = 52;
+  const plotH = 240;
+  const W = Math.max(480, padL + padR + nGroups * groupW + groupGap);
+  const H = plotH + padT + padB;
+
+  const sy = v => padT + plotH - plotH * (v - vmin) / (vmax - vmin);
+  const yBase = sy(baseline);
+
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', String(W));
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  // 网格线
+  for (let g = 0; g <= 4; g++) {
+    const val = vmin + (vmax - vmin) * g / 4;
+    const yy = sy(val);
+    const ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', padL); ln.setAttribute('x2', W - padR);
+    ln.setAttribute('y1', yy);  ln.setAttribute('y2', yy);
+    ln.setAttribute('stroke', val === baseline ? '#b8c8dc' : '#e2e9f3');
+    ln.setAttribute('stroke-width', val === baseline ? '1.2' : '0.8');
+    svg.appendChild(ln);
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', padL - 6); tx.setAttribute('y', yy + 3.5);
+    tx.setAttribute('text-anchor', 'end'); tx.setAttribute('font-size', '10'); tx.setAttribute('fill', '#8aaad0');
+    const fmt = v => Math.abs(v) >= 10000 ? (v/1000).toFixed(1)+'k'
+                  : Math.abs(v) >= 1000 ? String(Math.round(v))
+                  : String(Math.round(v * 100) / 100);
+    tx.textContent = fmt(val); svg.appendChild(tx);
+  }
+
+  // 柱子 + 数值标注
+  groups.forEach((grpName, gi) => {
+    const grpX = padL + groupGap / 2 + gi * groupW;
+    seriesLbls.forEach((_, si) => {
+      const val = getValue(gi, si);
+      if (val === null) return;
+      const color = COLORS[si % COLORS.length];
+      const x = grpX + si * barW;
+      const y1 = Math.min(yBase, sy(val));
+      const bh = Math.abs(yBase - sy(val));
+      if (bh < 0.5) return;
+      const rect = document.createElementNS(NS, 'rect');
+      rect.setAttribute('x', x); rect.setAttribute('y', y1);
+      rect.setAttribute('width', barW - 1); rect.setAttribute('height', bh);
+      rect.setAttribute('fill', color); rect.setAttribute('rx', '2');
+      rect.setAttribute('opacity', '0.88');
+      // hover 高亮
+      rect.addEventListener('mouseenter', () => rect.setAttribute('opacity','1'));
+      rect.addEventListener('mouseleave', () => rect.setAttribute('opacity','0.88'));
+      svg.appendChild(rect);
+
+      // 数值标注（柱子够高才显示）
+      if (bh >= 14 || nGroups * nSeries <= 8) {
+        const lbl = document.createElementNS(NS, 'text');
+        const labelY = val >= baseline ? y1 - 3 : y1 + bh + 11;
+        lbl.setAttribute('x', x + (barW - 1) / 2);
+        lbl.setAttribute('y', labelY);
+        lbl.setAttribute('text-anchor', 'middle');
+        lbl.setAttribute('font-size', nGroups * nSeries > 12 ? '8' : '9.5');
+        lbl.setAttribute('fill', '#3a5a8a');
+        const absVal = Math.abs(val);
+        lbl.textContent = absVal >= 10000 ? (val/1000).toFixed(1)+'k'
+                        : absVal >= 100   ? String(Math.round(val))
+                        : String(Math.round(val * 10) / 10);
+        svg.appendChild(lbl);
+      }
+    });
+
+    // 组标签（横轴）
+    const lx = grpX + (barW * nSeries) / 2;
+    const maxLabelLen = Math.floor(groupW / 5.5);
+    const labelText = grpName.length > maxLabelLen ? grpName.slice(0, maxLabelLen - 1) + '…' : grpName;
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', lx); tx.setAttribute('y', H - padB + 14);
+    tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('font-size', '10'); tx.setAttribute('fill', '#8aaad0');
+    tx.textContent = labelText;
+    svg.appendChild(tx);
+
+    // 组标签 title（完整名，鼠标悬停可见）
+    if (grpName.length > maxLabelLen) {
+      const ttl = document.createElementNS(NS, 'title'); ttl.textContent = grpName; tx.appendChild(ttl);
+    }
+  });
+
+  const cw = document.createElement('div'); cw.className = 'panel-chartwrap'; cw.appendChild(svg);
+  const legend = document.createElement('div'); legend.className = 'panel-legend';
+  seriesLbls.forEach((lbl, si) => {
+    const item = document.createElement('span'); item.className = 'panel-legend-item';
+    const sw = document.createElement('span'); sw.className = 'panel-legend-swatch';
+    sw.style.cssText = `background:${COLORS[si % COLORS.length]};height:10px;border-radius:2px;`;
+    item.appendChild(sw);
+    const nm = document.createElement('span'); nm.textContent = lbl; item.appendChild(nm);
+    legend.appendChild(item);
+  });
+  outer.appendChild(cw); outer.appendChild(legend);
+  return outer;
+}
+
+function renderPanelData(pd){
+  const card = document.createElement('div'); card.className = 'panel-card';
+  const head = document.createElement('div'); head.className = 'panel-head';
+  const infoBox = document.createElement('div'); infoBox.className = 'panel-head-info';
+  const title = document.createElement('span'); title.className = 'panel-title';
+  const metric = (pd.metric || '').trim();
+  const unit = (pd.unit || '').trim();
+  const customTitle = (pd.title || '').trim();
+  if (customTitle) {
+    title.textContent = '📋 ' + customTitle + (unit ? ' (' + unit + ')' : '');
+  } else {
+    title.textContent = '📋 原始数据' + (metric ? ' · ' + metric : '') + (unit ? ' (' + unit + ')' : '');
+  }
+  const sub = document.createElement('span'); sub.className = 'panel-sub';
+  const nObj = pd.n_objects || (pd.rows || []).length;
+  const nPer = (pd.periods || []).length;
+  const nCells = pd.n_cells || 0;
+  sub.textContent = `${nObj} ${pd.object_label || '对象'} × ${nPer} 时点 · 合计 ${nCells} 个有效单元`;
+  infoBox.appendChild(title); infoBox.appendChild(sub);
+  head.appendChild(infoBox);
+
+  const toggle = document.createElement('div'); toggle.className = 'panel-toggle';
+  const btnTable = document.createElement('button'); btnTable.textContent = '表格'; btnTable.className = 'active';
+  const btnLine  = document.createElement('button'); btnLine.textContent  = '折线图';
+  const btnBar   = document.createElement('button'); btnBar.textContent   = '柱状图';
+  toggle.appendChild(btnTable); toggle.appendChild(btnLine); toggle.appendChild(btnBar);
+  head.appendChild(toggle);
+  card.appendChild(head);
+
+  const tableView = buildPanelTable(pd);
+  card.appendChild(tableView);
+  let lineView = null, barView = null;
+
+  const showOnly = (which) => {
+    tableView.style.display = which === 'table' ? '' : 'none';
+    if (lineView) lineView.style.display = which === 'line' ? '' : 'none';
+    if (barView)  barView.style.display  = which === 'bar'  ? '' : 'none';
+    btnTable.classList.toggle('active', which === 'table');
+    btnLine.classList.toggle('active',  which === 'line');
+    btnBar.classList.toggle('active',   which === 'bar');
+  };
+
+  btnTable.addEventListener('click', () => showOnly('table'));
+  btnLine.addEventListener('click',  () => {
+    if (!lineView) { lineView = buildPanelChart(pd); card.appendChild(lineView); }
+    showOnly('line');
+  });
+  btnBar.addEventListener('click',   () => {
+    if (!barView)  { barView  = buildPanelBarChart(pd); card.appendChild(barView); }
+    showOnly('bar');
+  });
+  return card;
 }
 
 function addUserMsg(text){
@@ -310,13 +843,31 @@ function addAgentMsg(speaker, content, opts={}){
   const row = document.createElement('div'); row.className = 'msg-row bot';
   const bubbleCls = opts.cls || (info.isSystem ? 'system' : '');
 
+  // 研究员消息：先剥离可能残留的 JSON 信封，提取干净的 report 正文
+  // Leader 消息和系统消息不走此路径（它们不用 JSON 信封协议）
+  const isResearcher = speaker !== 'Leader' && speaker !== 'System';
+  const cleanContent = (isResearcher && !opts.html && !opts.cls)
+    ? extractReportFromContent(content)
+    : content;
+
   let bubbleHtml = '', refsHTML = '';
-  if (opts.html) bubbleHtml = content;
-  else if (opts.cls === 'system' || opts.cls === 'error' || opts.cls === 'thinking') bubbleHtml = escHtml(content);
-  else {
-    const { body, refs } = splitReply(content);
-    bubbleHtml = renderMarkdown(body);
-    refsHTML = buildRefsHTML(refs);
+  if (opts.html) {
+    bubbleHtml = cleanContent;
+  } else if (opts.cls === 'system' || opts.cls === 'error' || opts.cls === 'thinking') {
+    bubbleHtml = escHtml(cleanContent);
+  } else {
+    if (speaker === 'Leader') {
+      // Leader 正文完整展示，不拆分正文，也不生成独立参考资料面板。
+      bubbleHtml = renderMarkdown(cleanContent);
+      refsHTML = '';
+    } else if (Array.isArray(opts.references) && opts.references.length > 0) {
+      bubbleHtml = renderMarkdown(cleanContent);
+      refsHTML = buildRefsHTMLFromArray(opts.references);
+    } else {
+      const { body, refs } = splitReply(cleanContent);
+      bubbleHtml = renderMarkdown(body);
+      if (refs.length > 0) refsHTML = buildRefsHTMLFromArray(refs);
+    }
   }
 
   row.innerHTML = `
@@ -331,12 +882,20 @@ function addAgentMsg(speaker, content, opts={}){
     const body = row.querySelector('.msg-body');
     opts.charts.forEach(c => body.appendChild(renderChart(c)));
   }
+  if (Array.isArray(opts.panelDataList) && opts.panelDataList.length > 0) {
+    const body = row.querySelector('.msg-body');
+    opts.panelDataList.forEach(pd => {
+      if (pd && Array.isArray(pd.rows) && pd.rows.length > 0) {
+        body.appendChild(renderPanelData(pd));
+      }
+    });
+  }
   inner.appendChild(row); scrollToEnd();
   return row;
 }
 
 function addThinking(){
-  return addAgentMsg('TeamLead',
+  return addAgentMsg('Leader',
     '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span> 处理中',
     { cls:'thinking', html:true });
 }
@@ -357,7 +916,6 @@ async function send(){
   inp.value = ''; inp.style.height = 'auto';
   busy = true; sbtn.disabled = true; stopBtn.disabled = false;
 
-  stopStatusPolling();
   currentAbort = new AbortController();
 
   addUserMsg(text);
@@ -385,7 +943,7 @@ async function send(){
         const block = buf.slice(0, idx).trim();
         buf = buf.slice(idx + 2);
         if (!block) continue;
-        if (block.startsWith(':')) continue;            // SSE 心跳注释
+        if (block.startsWith(':')) continue;
         if (!block.startsWith('data:')) continue;
         const payload = block.slice(5).trim();
         if (payload === '[DONE]') break;
@@ -401,13 +959,25 @@ async function send(){
           const old = document.querySelector('[data-thinking="1"]'); if (old) old.remove();
           addAgentMsg('System', '出错: ' + obj.error, { cls:'error' }); continue;
         }
-        if (obj.__heartbeat__) continue;                 // 心跳事件,忽略
-        if (obj.speaker && (obj.content || (obj.charts && obj.charts.length))) {
+        if (obj.__heartbeat__) continue;
+        const hasContent = obj.content && String(obj.content).trim().length > 0;
+        const hasCharts  = Array.isArray(obj.charts) && obj.charts.length > 0;
+        const hasRefs    = Array.isArray(obj.references) && obj.references.length > 0;
+        // 后端下发的是 panel_data(单个 dict); 兼容旧前端预期的 panel_data_list(数组)
+        const _pdlRaw = Array.isArray(obj.panel_data_list) ? obj.panel_data_list : (obj.panel_data ? [obj.panel_data] : []);
+        const _pdl = _pdlRaw.filter(p => p && Array.isArray(p.rows) && p.rows.length > 0);
+        const hasPanel   = _pdl.length > 0;
+        if (obj.speaker && (hasContent || hasCharts || hasRefs || hasPanel)) {
           if (!firstAgentArrived) {
             firstAgentArrived = true;
             const old = document.querySelector('[data-thinking="1"]'); if (old) old.remove();
           }
-          addAgentMsg(obj.speaker, obj.content || '', { charts: obj.charts });
+          // host 已按 parts 协议把 content 设为干净正文，直接渲染
+          addAgentMsg(obj.speaker, obj.content || '', {
+            charts: obj.charts,
+            references: obj.references,
+            panelDataList: _pdl,
+          });
         }
       }
     }
@@ -420,8 +990,8 @@ async function send(){
   }
   busy = false; sbtn.disabled = false; stopBtn.disabled = true;
   currentAbort = null;
-  startStatusPolling();
   inp.focus();
+  loadHistoryList();   // 会话结束 → 刷新历史列表
 }
 
 async function stopTask(){
@@ -475,17 +1045,8 @@ async function newChat(){
   sid = '';
   const badge = document.getElementById('sess-badge');
   badge.textContent = '无会话'; badge.title = ''; badge.className = 'session-badge';
-  document.getElementById('chat-inner').innerHTML = `
-    <div class="empty-state" id="empty-state">
-      <h2>欢迎使用海南生态预测团队</h2>
-      <p>团队成员已就位。提出研究任务后,Leader 会判断派遣哪些专家参与多轮群聊讨论。</p>
-      <div class="suggestions">
-        <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
-        <button class="suggestion" onclick="quickSend(this)">分析海南未来 5 年耕地撂荒趋势,并画趋势预测图</button>
-        <button class="suggestion" onclick="quickSend(this)">台风对海南热带雨林的累计影响</button>
-        <button class="suggestion" onclick="quickSend(this)">自贸港封关后建设用地与耕地红线如何协调</button>
-      </div>
-    </div>`;
+  resetChatToEmpty();
+  loadHistoryList();
 }
 
 async function pollStatus(){
@@ -504,7 +1065,7 @@ async function pollStatus(){
 function startStatusPolling(){
   if (statusTimer) return;
   pollStatus();
-  statusTimer = setInterval(pollStatus, 15000);     // ★ 15s 一次,不再 2.5s
+  statusTimer = setInterval(pollStatus, 1500);
 }
 function stopStatusPolling(){
   if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
@@ -518,7 +1079,160 @@ document.getElementById('inp').addEventListener('input', function(){
   this.style.height = Math.min(this.scrollHeight, 160) + 'px';
 });
 
+
+// ══════════════════════════════════════════════════════════════════
+// 历史对话面板:折叠 / 列表 / 切换 / 删除 / 重放
+// ══════════════════════════════════════════════════════════════════
+function toggleHistory(){
+  const p = document.getElementById('history-panel');
+  p.classList.toggle('collapsed');
+  try { localStorage.setItem('historyCollapsed', p.classList.contains('collapsed') ? '1' : '0'); } catch(e) {}
+}
+
+function fmtStamp(s){
+  // 后端时间戳格式 YYYYMMDD_HHMM(精确到分), 转成 MM-DD HH:MM 展示
+  if (!s || s.length < 13) return s || '';
+  const mo = s.slice(4,6), d = s.slice(6,8), hh = s.slice(9,11), mm = s.slice(11,13);
+  return `${mo}-${d} ${hh}:${mm}`;
+}
+
+async function loadHistoryList(){
+  const listEl = document.getElementById('history-list');
+  const countEl = document.getElementById('history-count');
+  try {
+    const r = await fetch(`${API}/sessions`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const sessions = data.sessions || [];
+    countEl.textContent = String(sessions.length);
+    if (sessions.length === 0) {
+      listEl.innerHTML = '<li class="history-empty">暂无历史对话</li>';
+      return;
+    }
+    listEl.innerHTML = '';
+    sessions.forEach(s => {
+      const li = document.createElement('li');
+      li.className = 'history-item' + (s.sid === sid ? ' active' : '');
+      li.title = s.title || '未命名对话';
+      const body = document.createElement('div'); body.className = 'hi-body';
+      const t = document.createElement('div'); t.className = 'hi-title'; t.textContent = s.title || '未命名对话';
+      const m = document.createElement('div'); m.className = 'hi-meta';
+      m.textContent = fmtStamp(s.updated_at || s.created_at) + ' · ' + (s.n_messages || 0) + ' 条';
+      body.appendChild(t); body.appendChild(m);
+      body.addEventListener('click', () => loadSession(s.sid));
+      const del = document.createElement('button'); del.className = 'hi-del'; del.title = '删除此对话';
+      del.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
+      del.addEventListener('click', (ev) => { ev.stopPropagation(); deleteSession(s.sid, s.title); });
+      li.appendChild(body); li.appendChild(del);
+      listEl.appendChild(li);
+    });
+  } catch(e) {
+    listEl.innerHTML = '<li class="history-empty">加载失败</li>';
+    countEl.textContent = '0';
+  }
+}
+
+async function loadSession(targetSid){
+  if (busy) {
+    alert('当前有任务进行中,请先等待或停止,再切换历史对话。');
+    return;
+  }
+  if (!targetSid) return;
+  const listEl = document.getElementById('chat-inner');
+  try {
+    const r = await fetch(`${API}/sessions/${encodeURIComponent(targetSid)}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data.ok) { alert('读取会话失败: ' + (data.reason || '未知')); return; }
+    sid = targetSid;
+    const badge = document.getElementById('sess-badge');
+    badge.textContent = (data.meta && data.meta.title) ? data.meta.title : '会话进行中';
+    badge.title = '会话 ID: ' + sid; badge.className = 'session-badge active';
+    listEl.innerHTML = '';
+    const msgs = data.messages || [];
+    if (msgs.length === 0) {
+      listEl.innerHTML = '<div class="history-empty">(该会话暂无可展示的消息)</div>';
+    } else {
+      msgs.forEach(m => replayMessage(m));
+    }
+    scrollToEnd();
+    loadHistoryList();
+  } catch(e) {
+    alert('加载会话失败: ' + e.message);
+  }
+}
+
+function replayMessage(m){
+  const speaker = m.speaker || 'System';
+  if (speaker === 'user') {
+    clearEmptyState();
+    const inner = document.getElementById('chat-inner');
+    const row = document.createElement('div'); row.className = 'msg-row user';
+    row.innerHTML = `
+      <div class="msg-body">
+        <div class="msg-meta"><span class="msg-speaker">你</span><span></span></div>
+        <div class="msg-bubble"></div>
+      </div>
+      <div class="msg-avatar av-user">YOU</div>`;
+    row.querySelector('.msg-bubble').textContent = m.content || '';
+    inner.appendChild(row);
+    return;
+  }
+  const _rpdlRaw = Array.isArray(m.panel_data_list) ? m.panel_data_list : (m.panel_data ? [m.panel_data] : []);
+  const _rpdl = _rpdlRaw.filter(p => p && Array.isArray(p.rows) && p.rows.length > 0);
+  addAgentMsg(speaker, m.content || '', {
+    charts: m.charts,
+    references: m.references,
+    panelDataList: _rpdl,
+  });
+}
+
+async function deleteSession(targetSid, title){
+  if (!confirm(`确定删除历史对话「${title || '未命名'}」吗?此操作不可恢复。`)) return;
+  try {
+    const r = await fetch(`${API}/sessions/${encodeURIComponent(targetSid)}`, { method:'DELETE' });
+    const data = await r.json().catch(() => ({}));
+    if (!data.deleted) {
+      addAgentMsg('System', '删除失败，请检查后端日志。', { cls:'error' });
+      return;
+    }
+  } catch(e) {
+    addAgentMsg('System', '删除请求失败: ' + e.message, { cls:'error' });
+    return;
+  }
+  if (targetSid === sid) {
+    sid = '';
+    const badge = document.getElementById('sess-badge');
+    badge.textContent = '无会话'; badge.title = ''; badge.className = 'session-badge';
+    resetChatToEmpty();
+  }
+  loadHistoryList();
+}
+
+function resetChatToEmpty(){
+  document.getElementById('chat-inner').innerHTML = `
+    <div class="empty-state" id="empty-state">
+      <h2>欢迎使用海南生态研究团队</h2>
+      <p>团队成员已就位。你可以提出预测、验证、诊断、对比或探索类研究问题，Leader 会判断任务类型并调度专家分头研究。</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="quickSend(this)">让每位团队成员介绍一下自己</button>
+        <button class="suggestion" onclick="quickSend(this)">海南 2000-2020 年各市县建设用地与人口的弹性关系是什么</button>
+        <button class="suggestion" onclick="quickSend(this)">分析海南近 10 年极端降水频率变化</button>
+        <button class="suggestion" onclick="quickSend(this)">对比海南东西部市县的城镇化路径差异</button>
+      </div>
+    </div>`;
+}
+
+// 恢复折叠状态
+try {
+  if (localStorage.getItem('historyCollapsed') === '1') {
+    document.getElementById('history-panel').classList.add('collapsed');
+  }
+} catch(e) {}
+
 startStatusPolling();
+loadHistoryList();
 </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e"}' crossorigin="anonymous"></script>
 </body>
 </html>
